@@ -209,12 +209,80 @@ header { display: flex; justify-content: space-between; margin-bottom: 20px; fle
 #social-screen::-webkit-scrollbar-track { background: var(--bg-color); }
 #social-screen::-webkit-scrollbar-thumb { background-color: var(--crt-blue); border: 1px solid #fff; }
 
-/* Ein einzelner Post-Container */
-.social-post {
-    border: 1px solid var(--text-white);
-    background: rgba(0,0,0,0.2);
+/* --- SCROLLBARS ENTFERNEN (Global) --- */
+#list-view, #post-view, #social-screen, .single-post, #blog-screen {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+/* --- SUCHE --- */
+.search-bar {
+    border-bottom: 1px dashed var(--text-white);
+    padding: 5px;
+    margin-bottom: 10px;
+    background: #000;
+    color: var(--crt-blue);
+    font-weight: bold;
     display: flex;
-    flex-direction: column;
+}
+.search-cursor {
+    animation: blink 1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* --- SOCIAL POST OPTIMIERUNG --- */
+.social-post {
+    border: 1px solid transparent; /* Platzhalter */
+    background: rgba(0,0,0,0.2);
+    display: flex; flex-direction: column;
+    margin-bottom: 20px;
+    padding: 2px;
+    opacity: 0.6; /* Inaktive Posts dunkler */
+    transition: all 0.2s;
+}
+
+/* KLARES HIGHLIGHTING: Invertierte Farben */
+.social-post.active-post {
+    border: 2px solid var(--text-white);
+    background: var(--bg-color);
+    opacity: 1;
+    box-shadow: 0 0 15px rgba(255,255,255,0.1);
+    transform: scale(1.02); /* Leicht größer */
+}
+
+/* INTERAKTIONS-MODUS (Wenn man ENTER gedrückt hat) */
+.social-post.interaction-mode {
+    border-color: var(--crt-blue);
+    background: #000;
+}
+
+/* Button Highlighting im Interaktions-Modus */
+.action-btn { padding: 0 5px; border: 1px solid transparent; }
+.action-btn.selected-btn {
+    background: var(--crt-blue);
+    color: var(--text-white);
+}
+
+/* CAPTION (Standardmäßig eingeklappt) */
+.social-caption {
+    padding: 8px;
+    font-size: 1rem;
+    line-height: 1.2;
+    /* Eingeklappt */
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease-out, opacity 0.2s;
+    border-top: 1px solid transparent;
+}
+
+/* Ausgeklappt */
+.social-caption.expanded {
+    max-height: 200px; /* Genug Platz für Text */
+    opacity: 1;
+    border-top: 1px dotted var(--text-white);
+    margin-top: 5px;
 }
 
 /* Der "User" Header im Post */
@@ -250,19 +318,4 @@ header { display: flex; justify-content: space-between; margin-bottom: 20px; fle
     display: flex;
     gap: 10px;
     font-size: 0.9rem;
-}
-.action-btn { cursor: pointer; }
-.action-btn:hover { text-decoration: underline; color: var(--crt-blue); background: #fff; }
-
-/* Caption Bereich */
-.social-caption {
-    padding: 8px;
-    font-size: 1rem;
-    line-height: 1.2;
-}
-
-/* Aktiver Post (Markierung) */
-.social-post.active-post {
-    border: 2px solid #fff;
-    box-shadow: 0 0 10px var(--crt-blue);
 }
