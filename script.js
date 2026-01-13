@@ -1,17 +1,13 @@
 let posts = [];
-let viewState = 'list'; // 'list' oder 'post'
+let viewState = 'list';
 let selectedIndex = 0;
 let currentPostId = null;
 
 // DOM Elemente
 const listView = document.getElementById('list-view');
 const postView = document.getElementById('post-view');
-const pageNum = document.getElementById('page-num');
-const navHint = document.getElementById('nav-hint');
-
-// Touch Variablen
-let touchStartX = 0;
-let touchEndX = 0;
+const hintSelect = document.getElementById('hint-select');
+const hintNav = document.getElementById('hint-nav');
 
 // --- INIT ---
 async function loadPosts() {
@@ -19,34 +15,44 @@ async function loadPosts() {
         const response = await fetch('posts.json');
         posts = await response.json();
         renderList();
-        updateHints();
     } catch (e) {
-        console.error(e);
-        listView.innerHTML = "FEHLER: 'posts.json' NICHT GEFUNDEN.";
+        listView.innerHTML = "FEHLER: DATENBANK OFF-LINE.";
     }
 }
 
-// --- RENDER ---
+// --- RENDER LISTE ---
 function renderList() {
     viewState = 'list';
     postView.style.display = 'none';
-    listView.style.display = 'block';
-    pageNum.innerText = "01";
-    updateHints();
+    listView.style.display = 'flex'; // Wichtig: Flexbox für items
+    listView.style.flexDirection = 'column';
+
+    // Footer Update
+    hintSelect.innerText = "ÖFFNEN";
 
     listView.innerHTML = '';
+
+    // Header für die Liste (wie im Bild "NOM: ...")
+    const listHeader = document.createElement('div');
+    listHeader.style.marginBottom = "10px";
+    listHeader.innerHTML = "INDEX DES POSTS: <br>----------------";
+    listView.appendChild(listHeader);
+
     posts.forEach((post, index) => {
         const div = document.createElement('div');
+        // Aktives Element bekommt die Klasse .active (Blauer Hintergrund)
         div.className = `post-item ${index === selectedIndex ? 'active' : ''}`;
+
+        // HTML Struktur mit Füllpunkten
         div.innerHTML = `
-            <span style="pointer-events:none;">${post.title}</span>
-            <span style="pointer-events:none;">${post.location}</span>
+            <span>${post.title}</span>
+            <span class="dots-filler"></span>
+            <span>${post.date}</span>
         `;
 
-        // Touch/Maus Klick Event für Mobile (Funktioniert auch Desktop, aber User nutzt Keyboard)
         div.onclick = () => {
             selectedIndex = index;
-            renderList(); // Um active state zu updaten
+            renderList();
             openPost(index);
         };
 
@@ -54,46 +60,45 @@ function renderList() {
     });
 }
 
+// --- RENDER POST ---
 function openPost(index) {
     if (!posts[index]) return;
 
     viewState = 'post';
     currentPostId = index;
-    selectedIndex = index; // Sync selection
+    selectedIndex = index;
 
     listView.style.display = 'none';
     postView.style.display = 'block';
 
-    pageNum.innerText = (index + 1).toString().padStart(2, '0');
-    updateHints();
+    // Footer Update
+    hintSelect.innerText = "ZURÜCK";
 
     const post = posts[index];
+
+    // Struktur wie die Formularfelder im Bild
     postView.innerHTML = `
-        <div class="meta-block">
-            TITEL: ${post.title}<br>
-            DATUM: ${post.date} | ORT: ${post.location}<br>
-            AUTOR: ${post.author}
+        <div class="meta-row">
+            <span class="label">TITEL:</span>
+            <span class="value">${post.title}</span>
         </div>
+        <div class="meta-row">
+            <span class="label">RUBRIK:</span>
+            <span class="value">${post.location}</span>
+        </div>
+        <div class="meta-row">
+            <span class="label">AUTOR:</span>
+            <span class="value">${post.author}</span>
+        </div>
+        
         <div class="post-body">
             ${post.content}
         </div>
     `;
 }
 
-function updateHints() {
-    // Erkennt ob Touch gerät (grob)
-    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-
-    if (viewState === 'list') {
-        navHint.innerHTML = isTouch ? "TIPPEN ZUM ÖFFNEN" : "WÄHLEN: <span style='background:#0ff;color:#00a'>ENTER</span>";
-    } else {
-        navHint.innerHTML = isTouch ? "ZURÜCK: TIPPEN | NEXT: SWIPE" : "ZURÜCK: <span style='background:#0ff;color:#00a'>ESC</span>";
-    }
-}
-
-// --- KEYBOARD NAVIGATION (Desktop) ---
+// --- NAVIGATION ---
 document.addEventListener('keydown', (e) => {
-    // Verhindert Scrollen mit Pfeiltasten
     if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) {
         e.preventDefault();
     }
@@ -117,39 +122,27 @@ document.addEventListener('keydown', (e) => {
         } else if (e.key === 'ArrowLeft') {
             let prevIdx = (currentPostId - 1 + posts.length) % posts.length;
             openPost(prevIdx);
+        } else if (e.key === 'Enter') {
+            renderList(); // Enter im Post bringt dich zurück (optional)
         }
     }
 });
 
-// --- TOUCH NAVIGATION (Mobile/Tablet) ---
-// Swipe Erkennung
-document.addEventListener('touchstart', e => {
-    touchStartX = e.changedTouches[0].screenX;
-});
-
+// Touch Swipe (Unverändert gut)
+let touchStartX = 0;
+let touchEndX = 0;
+document.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX);
 document.addEventListener('touchend', e => {
     touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
+    if (viewState === 'post') {
+        if (touchEndX < touchStartX - 50) openPost((currentPostId + 1) % posts.length);
+        if (touchEndX > touchStartX + 50) openPost((currentPostId - 1 + posts.length) % posts.length);
+    }
 });
 
-function handleSwipe() {
-    // Swipe Logik nur im Post-View oder auch Liste? Hier nur Post-View für Next/Prev
-    if (viewState === 'post') {
-        if (touchEndX < touchStartX - 50) { // Swipe Links -> Nächster
-            let nextIdx = (currentPostId + 1) % posts.length;
-            openPost(nextIdx);
-        }
-        if (touchEndX > touchStartX + 50) { // Swipe Rechts -> Vorheriger
-            let prevIdx = (currentPostId - 1 + posts.length) % posts.length;
-            openPost(prevIdx);
-        }
-    }
-}
-
-// Zurück zur Liste bei Tippen auf Header (als "Home Button" Alternative auf Handy)
+// Home Button Logic
 document.querySelector('header').addEventListener('click', () => {
     if(viewState === 'post') renderList();
 });
 
-// Start
 loadPosts();

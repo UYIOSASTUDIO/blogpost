@@ -1,103 +1,177 @@
 :root {
-    --bg-color: #050510;
-    --screen-bg: #0000AA; /* Minitel Blau */
-    --text-main: #FFFFFF;
-    --text-dim: #00FFFF;
-    --highlight: #FFFFFF;
-    --highlight-text: #0000AA;
+    /* Exakte Farben aus dem Bild */
+    --bg-color: #020205;       /* Fast schwarz */
+    --crt-blue: #547698;       /* Das Minitel-Blau aus dem Header */
+    --text-white: #EBEFEF;     /* Kein hartes Weiß, leichtes CRT-Weiß */
+    --scanline: rgba(0, 0, 0, 0.5);
 }
 
 * { box-sizing: border-box; }
 
-body {
+html, body {
     margin: 0; padding: 0;
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    font-family: 'VT323', monospace;
-    height: 100vh; width: 100vw;
+    background-color: #000; /* Rahmen ums Gerät */
+    height: 100%;
+    width: 100%;
     overflow: hidden;
+}
+
+body {
+    font-family: 'VT323', monospace;
     display: flex;
     justify-content: center;
     align-items: center;
+    color: var(--text-white);
     text-transform: uppercase;
-    /* Maus nur verstecken, wenn kein Touchgerät (wird via JS handled oder hier global) */
+    /* Versteckt Cursor auf Desktop */
     cursor: none;
-    -webkit-tap-highlight-color: transparent; /* Kein blaues Highlight auf Handy */
+    -webkit-font-smoothing: none;
 }
 
-/* Auf Touch-Geräten den Standard-Cursor wieder erlauben, falls nötig */
-@media (hover: none) {
-    body { cursor: auto; }
-}
-
+/* Der Bildschirm Container */
 #minitel-screen {
-    background-color: var(--screen-bg);
-    width: 100%; max-width: 800px;
-    height: 100%; max-height: 600px;
+    background-color: var(--bg-color);
+    width: 100%;
+    max-width: 800px;
+    /* WICHTIG FÜR MOBILE: Nimmt exakt den sichtbaren Bereich */
+    height: 100dvh;
     position: relative;
-    display: flex; flex-direction: column;
-    padding: 20px;
-    box-shadow: 0 0 20px var(--screen-bg);
-    border: 2px solid #333;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    font-size: 1.5rem; /* Große Schrift wie im Bild */
+    letter-spacing: 1px;
+    text-shadow: 0 0 4px rgba(255, 255, 255, 0.4); /* Leichter CRT Glow */
 }
 
+/* Scanlines Overlay */
 #scanlines {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%),
-    linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06));
-    background-size: 100% 4px, 6px 100%;
-    pointer-events: none; z-index: 10;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 3px, 3px 100%;
+    pointer-events: none; z-index: 999;
 }
 
+/* --- HEADER DESIGN --- */
 header {
-    display: flex; justify-content: space-between;
-    border-bottom: 2px solid var(--text-main);
-    padding-bottom: 10px; margin-bottom: 20px;
-}
-
-.logo-ascii { font-size: 1.2rem; line-height: 0.8; white-space: pre; color: var(--text-dim); }
-.header-info { text-align: right; }
-.page-indicator { background: var(--text-main); color: var(--screen-bg); padding: 0 5px; font-size: 2rem; }
-
-#content-area { flex-grow: 1; overflow: hidden; position: relative; }
-
-/* LISTEN ANSICHT */
-.post-item {
-    display: flex; justify-content: space-between;
-    padding: 8px 10px; margin-bottom: 5px;
-    border: 1px solid transparent;
-    color: var(--text-dim);
-    cursor: pointer; /* Signalisiert Klickbarkeit auf Mobile */
-    transition: all 0.1s;
-}
-
-/* HIER IST DIE WICHTIGE ÄNDERUNG FÜR SICHTBARKEIT */
-.post-item.active {
-    background-color: var(--text-main); /* Weißer Hintergrund */
-    color: var(--screen-bg);            /* Blaue Schrift */
-    font-weight: bold;
-    border: 1px solid var(--text-main);
-}
-/* Kleiner Pfeil vor dem aktiven Element (optional, ASCII Style) */
-.post-item.active::before {
-    content: "> ";
-    position: absolute;
-    left: 5px;
-}
-
-/* EINZEL POST ANSICHT */
-.single-post { display: none; height: 100%; overflow-y: auto; /* Scrollbar falls Text lang, aber versteckt */ scrollbar-width: none; }
-.single-post::-webkit-scrollbar { display: none; }
-
-.meta-block {
     margin-bottom: 20px;
-    border-bottom: 1px dotted var(--text-dim);
-    padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
 }
 
-.post-body { font-size: 1.4rem; line-height: 1.4; color: var(--text-main); }
+.logo-section {
+    display: flex;
+    flex-direction: column;
+}
 
+.top-line {
+    margin-bottom: 10px;
+}
+
+/* Der blaue Block oben rechts wie im Bild */
+.header-block {
+    background-color: var(--crt-blue);
+    color: var(--text-white);
+    padding: 5px 15px;
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: bold;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+}
+
+/* --- LISTE & INHALT --- */
+#content-area {
+    flex-grow: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Listen Design */
+.post-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end; /* Damit die Punkte unten sitzen */
+    padding: 2px 5px;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+/* Die Punkte zwischen Titel und Datum */
+.dots-filler {
+    flex-grow: 1;
+    border-bottom: 2px dotted var(--text-white);
+    margin: 0 10px 5px 10px; /* Abstand und Ausrichtung */
+    opacity: 0.5;
+}
+
+/* AKTIVER STATUS (Wie der blaue Block im Bild) */
+.post-item.active {
+    background-color: var(--crt-blue);
+    color: var(--text-white);
+}
+
+/* Wenn aktiv, keine Punkte anzeigen, sieht sauberer aus oder Farbe anpassen */
+.post-item.active .dots-filler {
+    border-bottom: 2px dotted var(--text-white);
+    opacity: 1;
+}
+
+/* --- SINGLE POST --- */
+.single-post {
+    display: none;
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+    padding-right: 10px;
+}
+.single-post::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+.meta-row {
+    display: flex;
+    margin-bottom: 10px;
+}
+.label { width: 140px; }
+.value {
+    flex-grow: 1;
+    border-bottom: 2px dotted var(--text-white); /* Look from image fields */
+}
+
+.post-body {
+    margin-top: 30px;
+    line-height: 1.4;
+    white-space: pre-line; /* Damit Umbrüche im JSON funktionieren */
+}
+
+/* --- FOOTER / MENU --- */
 footer {
-    margin-top: auto; border-top: 2px solid var(--text-main);
-    padding-top: 10px; display: flex; justify-content: space-between; font-size: 1.2rem;
+    margin-top: auto;
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 10px;
+    font-size: 1.2rem;
+}
+
+/* Das Menü unten rechts nachbauen */
+.menu-box {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 5px;
+    text-align: right;
+    border: 2px solid var(--crt-blue);
+    padding: 5px;
+    background: #000;
+}
+
+.menu-item {
+    padding: 0 5px;
+}
+.menu-key {
+    background-color: var(--text-white);
+    color: #000;
+    padding: 0 5px;
+    margin-left: 5px;
+    font-weight: bold;
 }
