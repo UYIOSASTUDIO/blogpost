@@ -52,19 +52,19 @@ body {
     position: absolute;
     display: flex; flex-direction: column;
     box-shadow: 10px 10px 0px rgba(0,0,0,0.8);
-    transition: width 0.1s, height 0.1s;
+    /* Transition für Width/Height statt Scale = True Resizing */
+    transition: width 0.1s, height 0.1s, top 0.1s, left 0.1s;
     background: var(--bg-color);
+    overflow: hidden; /* Wichtig damit Inhalt nicht rausläuft beim Verkleinern */
 }
 
-/* Aktives Fenster ist oben (z-index) und hat schwarze Schatten */
 .window-wrapper.active { z-index: 100; border: 2px solid var(--window-border); }
-/* Inaktives Fenster ist weiter hinten */
 .window-wrapper.inactive { z-index: 50; border: 2px solid var(--window-inactive); box-shadow: none; opacity: 0.8; }
 
 .title-bar {
     height: 30px; border-bottom: 2px solid #000;
     display: flex; justify-content: space-between; align-items: center;
-    padding: 0 5px; font-weight: bold;
+    padding: 0 5px; font-weight: bold; flex-shrink: 0; /* Titlebar darf nicht schrumpfen */
 }
 .window-wrapper.active .title-bar { background: var(--window-border); color: #000; }
 .window-wrapper.inactive .title-bar { background: var(--window-inactive); color: #888; }
@@ -72,15 +72,11 @@ body {
 .title-text { flex-grow: 1; text-align: center; letter-spacing: 2px; }
 .win-btn { width: 15px; height: 15px; border: 1px solid #000; background: #fff; }
 
-/* --- SPECIFIC WINDOWS --- */
-/* Blog Window Styles */
-#win-blog { width: 700px; height: 500px; }
+/* --- SPECIFIC WINDOWS (Startgrößen werden via JS überschrieben beim Resize) --- */
 #blog-screen { flex-grow: 1; padding: 15px; overflow: hidden; position: relative; display: flex; flex-direction: column;}
 
-/* Help Window Styles */
-#win-help { width: 320px; height: 450px; }
 #help-screen {
-    flex-grow: 1; padding: 20px; overflow-y: auto;
+    flex-grow: 1; padding: 20px; overflow-y: hidden; /* Scrollen via JS */
     font-size: 1.2rem; line-height: 1.4;
     border-top: none;
 }
@@ -95,7 +91,7 @@ body {
     background-size: 100% 3px, 3px 100%; pointer-events: none; z-index: 999;
 }
 
-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+header { display: flex; justify-content: space-between; margin-bottom: 20px; flex-shrink: 0; }
 .header-block { background-color: var(--crt-blue); color: var(--text-white); padding: 5px 15px; font-weight: bold; box-shadow: 4px 4px 0px rgba(0,0,0,0.5); }
 .dots-filler { flex-grow: 1; border-bottom: 2px dotted var(--text-white); margin: 0 10px 5px 10px; opacity: 0.5; }
 .post-item { display: flex; justify-content: space-between; align-items: flex-end; padding: 2px 5px; margin-bottom: 8px; border: 1px solid transparent; }
@@ -107,14 +103,28 @@ header { display: flex; justify-content: space-between; margin-bottom: 20px; }
 .label { width: 140px; } .value { flex-grow: 1; border-bottom: 2px dotted var(--text-white); }
 .post-body { margin-top: 30px; line-height: 1.4; white-space: pre-line; }
 
-/* --- MOBILE --- */
+/* --- MOBILE OPTIMIERUNG --- */
 @media (max-width: 800px) {
     #desktop-area, .title-bar, #win-help { display: none !important; }
+
     #win-blog {
+        /* Reset alle Desktop Styles */
         position: fixed !important; top: 0 !important; left: 0 !important;
         transform: none !important; width: 100% !important; height: 100dvh !important;
         box-shadow: none !important; border: none !important; z-index: 1000 !important;
     }
-    #blog-screen { padding: 10px !important; }
+
+    #blog-screen {
+        padding: 15px !important;
+        /* Schriftgröße FIXEN für Mobile */
+        font-size: 1.1rem !important;
+    }
+
+    /* Damit Header und Content auf kleinen Screens gut aussehen */
+    header { margin-bottom: 15px; }
+    .header-block { padding: 5px 10px; font-size: 1.5rem; }
+    .post-item { padding: 10px 5px; font-size: 1.1rem; }
+    .post-body { font-size: 1.1rem; line-height: 1.5; }
+
     body { cursor: auto; }
 }
