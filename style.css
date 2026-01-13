@@ -114,11 +114,39 @@ header { display: flex; justify-content: space-between; margin-bottom: 20px; fle
         box-shadow: none !important; border: none !important; z-index: 1000 !important;
     }
 
+    /* --- SPECIFIC WINDOWS --- */
+    /* WICHTIG: min-height:0 ist der Trick, damit Flex-Items scrollen */
     #blog-screen {
-        padding: 15px !important;
-        /* Schriftgröße FIXEN für Mobile */
-        font-size: 1.1rem !important;
+        flex-grow: 1;
+        padding: 15px;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
     }
+
+    /* Sicherstellen, dass die Liste scrollbar ist, falls das Fenster winzig ist */
+    #list-view {
+        flex-grow: 1;
+        overflow-y: auto;
+        min-height: 0;
+        scrollbar-width: none; /* Optional: Scrollbar verstecken für Clean-Look */
+    }
+
+    /* Der Post View muss wachsen und scrollen */
+    #post-view {
+        flex-grow: 1;          /* Nimmt den restlichen Platz ein */
+        overflow-y: auto;      /* Erlaubt scrollen */
+        min-height: 0;         /* Wichtig für Flexbox Scrolling */
+        display: none;         /* Standardmäßig aus */
+        padding-right: 5px;    /* Abstand zur Scrollbar */
+    }
+
+    /* Custom Scrollbar für den Blog (passend zum Help Window) */
+    #post-view::-webkit-scrollbar { width: 6px; }
+    #post-view::-webkit-scrollbar-track { background: var(--bg-color); }
+    #post-view::-webkit-scrollbar-thumb { background-color: var(--crt-blue); border: 1px solid #fff; }
 
     /* Damit Header und Content auf kleinen Screens gut aussehen */
     header { margin-bottom: 15px; }

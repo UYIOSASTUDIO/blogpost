@@ -168,23 +168,38 @@ document.addEventListener('keydown', (e) => {
         const app = apps[activeApp];
         if (!app || !app.open) return;
 
-        // Verschieben
-        if (e.key === 'ArrowRight') app.x = Math.min(95, app.x + 2);
-        if (e.key === 'ArrowLeft') app.x = Math.max(5, app.x - 2);
-        if (e.key === 'ArrowUp') app.y = Math.max(5, app.y - 2);
-        if (e.key === 'ArrowDown') app.y = Math.min(95, app.y + 2);
+        // 1. RESIZE MODUS (CMD + ALT + ARROWS) -> Nur Breite/Höhe
+        if (e.altKey) {
+            const step = 20;
+            if (e.key === 'ArrowRight') app.w += step;
+            if (e.key === 'ArrowLeft')  app.w = Math.max(300, app.w - step); // Min Width 300
+            if (e.key === 'ArrowDown')  app.h += step;
+            if (e.key === 'ArrowUp')    app.h = Math.max(200, app.h - step); // Min Height 200
 
-        // ECHTES RESIZING (Pixel addieren/subtrahieren)
+            updateVisuals();
+            return;
+        }
+
+        // 2. MOVE MODUS (NUR CMD + ARROWS) -> Verschieben
+        if (!e.altKey && !e.shiftKey) {
+            if (e.key === 'ArrowRight') app.x = Math.min(95, app.x + 2);
+            if (e.key === 'ArrowLeft')  app.x = Math.max(5, app.x - 2);
+            if (e.key === 'ArrowUp')    app.y = Math.max(5, app.y - 2);
+            if (e.key === 'ArrowDown')  app.y = Math.min(95, app.y + 2);
+        }
+
+        // 3. PROPORTIONAL RESIZE (CMD + +/-) -> Bleibt als Alternative
         const resizeStep = 20;
         if (e.key === '+' || e.key === '=') {
             app.w += resizeStep;
             app.h += resizeStep;
         }
         if (e.key === '-') {
-            app.w = Math.max(200, app.w - resizeStep);
+            app.w = Math.max(300, app.w - resizeStep);
             app.h = Math.max(200, app.h - resizeStep);
         }
 
+        // CLOSE
         if (e.key === 'Backspace') {
             app.open = false;
             const openApps = Object.keys(apps).filter(k => apps[k].open);
@@ -214,7 +229,20 @@ document.addEventListener('keydown', (e) => {
 });
 
 function handleBlogNav(e) {
+    // Wenn SHIFT gedrückt ist, scrollen wir den Inhalt (nur im Post-View)
+    if (viewState === 'post' && e.shiftKey) {
+        e.preventDefault();
+        const view = document.getElementById('post-view');
+        const scrollStep = 30;
+
+        if (e.key === 'ArrowDown') view.scrollTop += scrollStep;
+        if (e.key === 'ArrowUp')   view.scrollTop -= scrollStep;
+        return; // Navigation abbrechen, da wir scrollen
+    }
+
+    // Normale Navigation (ohne Shift)
     if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
+
     if (viewState === 'list') {
         if (e.key === 'ArrowDown') { selectedPostIndex = (selectedPostIndex + 1) % posts.length; renderBlogList(); }
         else if (e.key === 'ArrowUp') { selectedPostIndex = (selectedPostIndex - 1 + posts.length) % posts.length; renderBlogList(); }
@@ -223,13 +251,11 @@ function handleBlogNav(e) {
         if (e.key === 'Escape' || e.key === 'Backspace') { renderBlogList(); }
         else if (e.key === 'ArrowRight') {
             let next = (currentPostId + 1) % posts.length;
-            // SYNC SELECTION BEIM WECHSEL
             selectedPostIndex = next;
             openBlogPost(next);
         }
         else if (e.key === 'ArrowLeft') {
             let prev = (currentPostId - 1 + posts.length) % posts.length;
-            // SYNC SELECTION BEIM WECHSEL
             selectedPostIndex = prev;
             openBlogPost(prev);
         }
