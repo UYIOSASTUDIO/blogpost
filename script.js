@@ -8,6 +8,10 @@ const apps = {
     help: {
         id: 'win-help', iconId: 'icon-help', open: true,
         x: 75, y: 40, w: 320, h: 450
+    },
+    social: {
+        id: 'win-social', iconId: 'icon-social', open: false, // Startet minimiert
+        x: 20, y: 40, w: 400, h: 550
     }
 };
 
@@ -15,7 +19,7 @@ let activeApp = 'blog';
 let systemFocus = 'app';
 let isMobile = false;
 let selectedIconIndex = 0;
-const iconKeys = ['blog', 'help'];
+const iconKeys = ['blog', 'help', 'social'];
 
 // Blog Data State
 let posts = [];
@@ -27,22 +31,49 @@ let currentPostId = null;
 const listView = document.getElementById('list-view');
 const postView = document.getElementById('post-view');
 
+let socialPosts = [];
+let selectedSocialIndex = 0;
+let lastBottomPress = 0;
+
 // --- INIT ---
 function init() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     loadPosts();
     updateVisuals();
+    renderSocial();
 }
 
 function checkMobile() { isMobile = window.innerWidth <= 800; }
 
 async function loadPosts() {
     try {
-        const r = await fetch('posts.json');
-        posts = await r.json();
+        // 1. Blog Posts laden
+        const r1 = await fetch('posts.json');
+        posts = await r1.json();
         renderBlogList();
-    } catch (e) { listView.innerHTML = "ERR: DB LOST."; }
+
+        // 2. Social Posts laden
+        const r2 = await fetch('social.json');
+        let rawSocial = await r2.json();
+
+        // 3. Likes aus dem LocalStorage dazu mixen
+        socialPosts = rawSocial.map(post => {
+            // Check ob wir lokal einen Like-Stand gespeichert haben
+            const savedLikes = localStorage.getItem(`like_${post.id}`);
+            if (savedLikes) {
+                post.likes = parseInt(savedLikes); // Überschreibe JSON Wert mit gespeichertem Wert
+                post.likedByMe = true; // Markierung dass wir schon geliked haben (optional für Visuals)
+            }
+            return post;
+        });
+
+        renderSocial();
+
+    } catch (e) {
+        listView.innerHTML = "ERR: DB LOST.";
+        console.error(e);
+    }
 }
 
 // --- RENDERING ---
@@ -225,6 +256,53 @@ document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowDown') helpScreen.scrollTop += 30;
             if (e.key === 'ArrowUp') helpScreen.scrollTop -= 30;
         }
+        // 3. SOCIAL LOGIC (Im keydown Listener)
+        if (activeApp === 'social') {
+            if (["ArrowUp","ArrowDown"].includes(e.code)) e.preventDefault();
+
+            // NACH UNTEN
+            if (e.key === 'ArrowDown') {
+                // Sind wir noch NICHT am Ende?
+                if (selectedSocialIndex < socialPosts.length - 1) {
+                    selectedSocialIndex++;
+                }
+                // Wir SIND am Ende. Check auf Doppelklick.
+                else {
+                    const now = Date.now();
+                    // Wenn der letzte Klick weniger als 400ms her ist -> Reset nach oben
+                    if (now - lastBottomPress < 400) {
+                        selectedSocialIndex = 0;
+                    }
+                    lastBottomPress = now;
+                }
+                renderSocial();
+            }
+
+            // NACH OBEN (Loop nach unten verhindern wir hier auch, wenn du willst)
+            if (e.key === 'ArrowUp') {
+                if (selectedSocialIndex > 0) {
+                    selectedSocialIndex--;
+                    renderSocial();
+                }
+            }
+
+            // LIKEN MIT ENTER
+            if (e.key === 'Enter') {
+                const post = socialPosts[selectedSocialIndex];
+
+                // Einfache Logik: Immer +1 (oder Toggle, wenn du willst)
+                post.likes++;
+                post.likedByMe = true;
+
+                // Speichern im Browser
+                localStorage.setItem(`like_${post.id}`, post.likes);
+
+                // Neu zeichnen um neue Zahl zu zeigen
+                renderSocial();
+
+                // Kleines Feedback (Optional: Sound abspielen könnte man hier auch)
+            }
+        }
     }
 });
 
@@ -268,6 +346,46 @@ function handleMobileInput(e) {
         if (e.key === 'Enter') openBlogPost(selectedPostIndex);
     } else {
         if (e.key === 'Escape') renderBlogList();
+    }
+}
+
+function renderSocial() {
+    const screen = document.getElementById('social-screen');
+    screen.innerHTML = '';
+
+    socialPosts.forEach((post, index) => {
+        const postDiv = document.createElement('div');
+        const activeClass = index === selectedSocialIndex ? 'active-post' : '';
+        postDiv.className = `social-post ${activeClass}`;
+
+        // Visueller Indikator ob geliked (Herzchen)
+        const likeBtnText = post.likedByMe ? "[♥ LIKED]" : "[LIKE]";
+        const likeStyle = post.likedByMe ? "color:var(--crt-blue); font-weight:bold;" : "";
+
+        postDiv.innerHTML = `
+            <div class="social-header">
+                <span>@${post.user}</span>
+                <span>ID: ${post.id}</span>
+            </div>
+            <div class="ascii-pic">
+                <pre>${post.art}</pre>
+            </div>
+            <div class="social-actions">
+                <span class="action-btn" style="${likeStyle}">${likeBtnText}</span>
+                <span class="action-btn">[COMMENT]</span>
+                <span class="action-btn">[SHARE]</span>
+            </div>
+            <div class="social-caption">
+                <strong>${post.likes} likes</strong><br>
+                ${post.caption}
+            </div>
+        `;
+        screen.appendChild(postDiv);
+    });
+
+    const activeEl = screen.children[selectedSocialIndex];
+    if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }
 

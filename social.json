@@ -1,0 +1,23 @@
+[
+  {
+    "id": "post_001",
+    "user": "mishapetrick",
+    "likes": 1132,
+    "caption": "Orca family animation test. #retro #ascii",
+    "art": "\n           ,\n        _./   \\\n      .'     (\n     /   (    \\\n    |     \\    \\\n     \\     \\    )\n      '.    )  /\n        '._/ .'\n           |/\n        "
+  },
+  {
+    "id": "post_002",
+    "user": "system_admin",
+    "likes": 404,
+    "caption": "Feeling cute, might delete server later.",
+    "art": "\n      .::.\n    .::::::.\n   ::::::::::\n   '::::::::'\n     '::::'\n       ::\n       ::\n      _::_\n   "
+  },
+  {
+    "id": "post_003",
+    "user": "retro_vibe",
+    "likes": 88,
+    "caption": "Sunset in 8-bit mode.",
+    "art": "\n      _\n     / \\\n    /   \\\n   /_____\\\n   |  _  |\n   | | | |\n   |_|_|_|\n        "
+  }
+]
