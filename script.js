@@ -55,26 +55,24 @@ function checkMobile() { isMobile = window.innerWidth <= 800; }
 
 async function loadPosts() {
     try {
-        // 1. Blog Posts laden
         const r1 = await fetch('posts.json');
         posts = await r1.json();
         renderBlogList();
 
-        // 2. Social Posts laden
         const r2 = await fetch('social.json');
         let rawSocial = await r2.json();
 
-        // 3. Likes aus dem LocalStorage dazu mixen
+        // Likes & Status aus LocalStorage holen
         socialPosts = rawSocial.map(post => {
-            // Check ob wir lokal einen Like-Stand gespeichert haben
-            const savedLikes = localStorage.getItem(`like_${post.id}`);
-            if (savedLikes) {
-                post.likes = parseInt(savedLikes); // Überschreibe JSON Wert mit gespeichertem Wert
-                post.likedByMe = true; // Markierung dass wir schon geliked haben (optional für Visuals)
+            const savedLike = localStorage.getItem(`liked_${post.id}`);
+            if (savedLike === 'true') {
+                post.likedByMe = true;
+                post.likes++;
             }
             return post;
         });
 
+        // Immer rendern, damit Filter funktioniert
         renderSocial();
 
     } catch (e) {
@@ -88,13 +86,32 @@ function renderBlogList() {
     viewState = 'list';
     postView.style.display = 'none';
     listView.style.display = 'flex'; listView.style.flexDirection = 'column';
-    listView.innerHTML = '<div style="margin-bottom:10px;">INDEX:<br>------</div>';
 
-    posts.forEach((post, index) => {
+    // Header mit Suche
+    listView.innerHTML = `
+        <div class="search-bar">SUCHE: ${searchQuery}<span class="search-cursor">_</span></div>
+        <div style="margin-bottom:10px;">INDEX:<br>------</div>
+    `;
+
+    // Filtern
+    const filtered = posts.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    if (filtered.length === 0) {
+        listView.innerHTML += "<div>KEINE ERGEBNISSE.</div>";
+        return;
+    }
+
+    // Index Korrektur für gefilterte Liste
+    if (selectedPostIndex >= filtered.length) selectedPostIndex = filtered.length - 1;
+    if (selectedPostIndex < 0) selectedPostIndex = 0;
+
+    filtered.forEach((post, index) => {
         const div = document.createElement('div');
         div.className = `post-item ${index === selectedPostIndex ? 'active' : ''}`;
         div.innerHTML = `<span>${post.title}</span><span class="dots-filler"></span><span>${post.date}</span>`;
-        div.onclick = () => { selectedPostIndex = index; renderBlogList(); openBlogPost(index); };
+        // Mapping zum Original Index
+        const originalIndex = posts.indexOf(post);
+        div.onclick = () => { selectedPostIndex = index; openBlogPost(originalIndex); };
         listView.appendChild(div);
     });
 }
@@ -161,32 +178,41 @@ function updateVisuals() {
 document.addEventListener('keydown', (e) => {
     if (isMobile) return handleMobileInput(e);
 
-    // GLOBAL: TOGGLE DESKTOP / APP FOCUS
+    // 1. GLOBAL HOTKEYS (Space, Tab...)
     if (e.code === 'Space' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        systemFocus = (systemFocus === 'app') ? 'desktop' : 'app';
-        updateVisuals();
-        return;
+        e.preventDefault(); systemFocus = (systemFocus === 'app') ? 'desktop' : 'app'; updateVisuals(); return;
     }
-
-    // GLOBAL: TAB (Fenster wechseln)
+    // Dein Tab Code (leicht angepasst für Loop)
     if (e.code === 'Tab' && systemFocus === 'app') {
         e.preventDefault();
         const keys = Object.keys(apps);
-        let currentIndex = keys.indexOf(activeApp);
-        let nextIndex = (currentIndex + 1) % keys.length;
-        while (!apps[keys[nextIndex]].open) {
-            nextIndex = (nextIndex + 1) % keys.length;
-            if (nextIndex === currentIndex) break;
-        }
-        if (apps[keys[nextIndex]].open) {
-            activeApp = keys[nextIndex];
-            updateVisuals();
+        let idx = keys.indexOf(activeApp);
+        // Suche nächstes offenes Fenster
+        for(let i=0; i<keys.length; i++) {
+            idx = (idx + 1) % keys.length;
+            if(apps[keys[idx]].open) { activeApp = keys[idx]; updateVisuals(); return; }
         }
         return;
     }
 
-    // MODE: DESKTOP
+    // 2. SUCHE (Tippen abfangen)
+    // Nur aktiv wenn wir im App-Modus sind und NICHT Navigations-Tasten drücken
+    if (systemFocus === 'app' && (activeApp === 'blog' || activeApp === 'social')) {
+        const isNavKey = e.key.length > 1 || e.ctrlKey || e.metaKey || e.altKey;
+        // Wenn es ein Buchstabe ist UND wir nicht gerade im Social-Focus Mode Navigieren
+        if (!isNavKey && !(activeApp === 'social' && socialMode === 'focus')) {
+            searchQuery += e.key;
+            if(activeApp === 'blog') renderBlogList(); else renderSocial();
+            return; // Navigation stoppen, da wir tippen
+        }
+        if (e.key === 'Backspace') {
+            searchQuery = searchQuery.slice(0, -1);
+            if(activeApp === 'blog') renderBlogList(); else renderSocial();
+            return;
+        }
+    }
+
+    // 3. DESKTOP MODE (DEINE ALTE LOGIK BEHALTEN)
     if (systemFocus === 'desktop') {
         if (e.key === 'ArrowRight' || e.key === 'ArrowDown') selectedIconIndex = (selectedIconIndex + 1) % iconKeys.length;
         if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') selectedIconIndex = (selectedIconIndex - 1 + iconKeys.length) % iconKeys.length;
@@ -200,114 +226,107 @@ document.addEventListener('keydown', (e) => {
         return;
     }
 
-    // MODE: WINDOW MANAGEMENT (CMD + ...)
+    // 4. WINDOW COMMANDS (CMD + ...) - Bleibt gleich
     if (systemFocus === 'app' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         const app = apps[activeApp];
         if (!app || !app.open) return;
-
-        // 1. RESIZE MODUS (CMD + ALT + ARROWS) -> Nur Breite/Höhe
+        // Resize Modus (ALT)
         if (e.altKey) {
             const step = 20;
             if (e.key === 'ArrowRight') app.w += step;
-            if (e.key === 'ArrowLeft')  app.w = Math.max(300, app.w - step); // Min Width 300
+            if (e.key === 'ArrowLeft')  app.w = Math.max(300, app.w - step);
             if (e.key === 'ArrowDown')  app.h += step;
-            if (e.key === 'ArrowUp')    app.h = Math.max(200, app.h - step); // Min Height 200
-
-            updateVisuals();
-            return;
+            if (e.key === 'ArrowUp')    app.h = Math.max(200, app.h - step);
+            updateVisuals(); return;
         }
-
-        // 2. MOVE MODUS (NUR CMD + ARROWS) -> Verschieben
+        // Move Modus
         if (!e.altKey && !e.shiftKey) {
             if (e.key === 'ArrowRight') app.x = Math.min(95, app.x + 2);
             if (e.key === 'ArrowLeft')  app.x = Math.max(5, app.x - 2);
             if (e.key === 'ArrowUp')    app.y = Math.max(5, app.y - 2);
             if (e.key === 'ArrowDown')  app.y = Math.min(95, app.y + 2);
         }
-
-        // 3. PROPORTIONAL RESIZE (CMD + +/-) -> Bleibt als Alternative
-        const resizeStep = 20;
-        if (e.key === '+' || e.key === '=') {
-            app.w += resizeStep;
-            app.h += resizeStep;
-        }
-        if (e.key === '-') {
-            app.w = Math.max(300, app.w - resizeStep);
-            app.h = Math.max(200, app.h - resizeStep);
-        }
-
-        // CLOSE
+        // Close
         if (e.key === 'Backspace') {
             app.open = false;
-            const openApps = Object.keys(apps).filter(k => apps[k].open);
-            if (openApps.length > 0) activeApp = openApps[0];
-            else systemFocus = 'desktop';
+            // Fokus auf Desktop wenn alles zu
+            const anyOpen = Object.values(apps).some(a => a.open);
+            if(!anyOpen) systemFocus = 'desktop';
         }
-        updateVisuals();
-        return;
+        updateVisuals(); return;
     }
 
-    // MODE: APP CONTENT NAVIGATION
+    // 5. APP CONTENT NAVIGATION
     if (systemFocus === 'app') {
 
-        // 1. BLOG LOGIC
+        // --- BLOG ---
         if (activeApp === 'blog') {
+            // WICHTIG: Enter muss jetzt das gefilterte Ergebnis öffnen
+            if (e.key === 'Enter' && viewState === 'list') {
+                const filtered = posts.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
+                const post = filtered[selectedPostIndex];
+                if(post) openBlogPost(posts.indexOf(post));
+                return;
+            }
+            // Standard Navigation aufrufen
             handleBlogNav(e);
         }
 
-        // 2. HELP LOGIC (Scrolling)
+        // --- HELP ---
         if (activeApp === 'help') {
             e.preventDefault();
-            const helpScreen = document.getElementById('help-screen');
-            if (e.key === 'ArrowDown') helpScreen.scrollTop += 30;
-            if (e.key === 'ArrowUp') helpScreen.scrollTop -= 30;
+            const hs = document.getElementById('help-screen');
+            if (e.key === 'ArrowDown') hs.scrollTop += 30;
+            if (e.key === 'ArrowUp') hs.scrollTop -= 30;
         }
-        // 3. SOCIAL LOGIC (Im keydown Listener)
+
+        // --- SOCIAL (NEUE LOGIK) ---
         if (activeApp === 'social') {
-            if (["ArrowUp","ArrowDown"].includes(e.code)) e.preventDefault();
+            e.preventDefault();
 
-            // NACH UNTEN
-            if (e.key === 'ArrowDown') {
-                // Sind wir noch NICHT am Ende?
-                if (selectedSocialIndex < socialPosts.length - 1) {
-                    selectedSocialIndex++;
+            // LIST MODE
+            if (socialMode === 'list') {
+                if (e.key === 'ArrowDown') {
+                    const filtered = socialPosts.filter(p => p.user.includes(searchQuery));
+                    if (selectedSocialIndex < filtered.length - 1) selectedSocialIndex++;
+                    renderSocial();
                 }
-                // Wir SIND am Ende. Check auf Doppelklick.
-                else {
-                    const now = Date.now();
-                    // Wenn der letzte Klick weniger als 400ms her ist -> Reset nach oben
-                    if (now - lastBottomPress < 400) {
-                        selectedSocialIndex = 0;
-                    }
-                    lastBottomPress = now;
+                if (e.key === 'ArrowUp') {
+                    if (selectedSocialIndex > 0) selectedSocialIndex--;
+                    renderSocial();
                 }
-                renderSocial();
-            }
-
-            // NACH OBEN (Loop nach unten verhindern wir hier auch, wenn du willst)
-            if (e.key === 'ArrowUp') {
-                if (selectedSocialIndex > 0) {
-                    selectedSocialIndex--;
+                if (e.key === 'Enter') {
+                    socialMode = 'focus';
+                    socialFocusTarget = 'like';
                     renderSocial();
                 }
             }
-
-            // LIKEN MIT ENTER
-            if (e.key === 'Enter') {
-                const post = socialPosts[selectedSocialIndex];
-
-                // Einfache Logik: Immer +1 (oder Toggle, wenn du willst)
-                post.likes++;
-                post.likedByMe = true;
-
-                // Speichern im Browser
-                localStorage.setItem(`like_${post.id}`, post.likes);
-
-                // Neu zeichnen um neue Zahl zu zeigen
-                renderSocial();
-
-                // Kleines Feedback (Optional: Sound abspielen könnte man hier auch)
+            // FOCUS MODE (Buttons)
+            else if (socialMode === 'focus') {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                    socialFocusTarget = (socialFocusTarget === 'like') ? 'caption' : 'like';
+                    renderSocial();
+                }
+                if (e.key === 'Enter') {
+                    const filtered = socialPosts.filter(p => p.user.includes(searchQuery));
+                    const post = filtered[selectedSocialIndex];
+                    if (socialFocusTarget === 'like') {
+                        if (!post.likedByMe) {
+                            post.likes++; post.likedByMe = true;
+                            localStorage.setItem(`liked_${post.id}`, 'true');
+                        } else {
+                            post.likes--; post.likedByMe = false;
+                            localStorage.removeItem(`liked_${post.id}`);
+                        }
+                    } else if (socialFocusTarget === 'caption') {
+                        expandedCaptions[post.id] = !expandedCaptions[post.id];
+                    }
+                    renderSocial();
+                }
+                if (e.key === 'Escape') {
+                    socialMode = 'list'; renderSocial();
+                }
             }
         }
     }
@@ -358,42 +377,46 @@ function handleMobileInput(e) {
 
 function renderSocial() {
     const screen = document.getElementById('social-screen');
-    screen.innerHTML = '';
+    screen.innerHTML = `
+        <div class="search-bar">FILTER: ${searchQuery}<span class="search-cursor">_</span></div>
+    `;
 
-    socialPosts.forEach((post, index) => {
-        const postDiv = document.createElement('div');
-        const activeClass = index === selectedSocialIndex ? 'active-post' : '';
-        postDiv.className = `social-post ${activeClass}`;
+    const filtered = socialPosts.filter(p => p.user.includes(searchQuery) || p.caption.includes(searchQuery));
 
-        // Visueller Indikator ob geliked (Herzchen)
-        const likeBtnText = post.likedByMe ? "[♥ LIKED]" : "[LIKE]";
-        const likeStyle = post.likedByMe ? "color:var(--crt-blue); font-weight:bold;" : "";
+    if (filtered.length === 0) {
+        screen.innerHTML += "<div>LEER.</div>"; return;
+    }
+    if (selectedSocialIndex >= filtered.length) selectedSocialIndex = filtered.length - 1;
 
-        postDiv.innerHTML = `
-            <div class="social-header">
-                <span>@${post.user}</span>
-                <span>ID: ${post.id}</span>
-            </div>
-            <div class="ascii-pic">
-                <pre>${post.art}</pre>
-            </div>
+    filtered.forEach((post, index) => {
+        const isActive = index === selectedSocialIndex;
+        const isFocus = isActive && socialMode === 'focus';
+        const isExpanded = expandedCaptions[post.id];
+
+        const likeText = post.likedByMe ? "♥" : "LIKE";
+        const descText = isExpanded ? "CLOSE" : "DESC";
+
+        // Button Styles
+        const likeClass = (isFocus && socialFocusTarget === 'like') ? 'selected-btn' : '';
+        const descClass = (isFocus && socialFocusTarget === 'caption') ? 'selected-btn' : '';
+
+        const div = document.createElement('div');
+        div.className = `social-post ${isActive ? 'active-post' : ''} ${isFocus ? 'interaction-mode' : ''}`;
+
+        div.innerHTML = `
+            <div class="social-header"><span>@${post.user}</span><span>ID:${post.id}</span></div>
+            <div class="ascii-pic"><pre>${post.art}</pre></div>
             <div class="social-actions">
-                <span class="action-btn" style="${likeStyle}">${likeBtnText}</span>
-                <span class="action-btn">[COMMENT]</span>
-                <span class="action-btn">[SHARE]</span>
+                <span class="action-btn ${likeClass}">[${likeText} ${post.likes}]</span>
+                <span class="action-btn ${descClass}">[${descText}]</span>
             </div>
-            <div class="social-caption">
-                <strong>${post.likes} likes</strong><br>
-                ${post.caption}
-            </div>
+            <div class="social-caption ${isExpanded ? 'expanded' : ''}">${post.caption}</div>
         `;
-        screen.appendChild(postDiv);
+        screen.appendChild(div);
     });
 
-    const activeEl = screen.children[selectedSocialIndex];
-    if (activeEl) {
-        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    const activeEl = screen.children[selectedSocialIndex + 1];
+    if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // Mobile Touch
