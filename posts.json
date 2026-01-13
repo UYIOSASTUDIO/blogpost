@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "title": "WILLKOMMEN IM NETZ",
+    "date": "13.01.2026",
+    "location": "BERLIN",
+    "author": "ADMIN",
+    "content": "Systemtest erfolgreich.<br><br>Auf dem PC: Nutze Pfeiltasten + Enter.<br>Auf dem Handy: Tippen und Wischen."
+  },
+  {
+    "id": 2,
+    "title": "PROJEKT STRUKTUR",
+    "date": "14.01.2026",
+    "location": "HOME",
+    "author": "DEV",
+    "content": "Das Projekt ist jetzt sauber in HTML, CSS und JS getrennt. Das macht die Wartung viel einfacher."
+  },
+  {
+    "id": 3,
+    "title": "DESIGN UPDATE",
+    "date": "15.01.2026",
+    "location": "WEB",
+    "author": "DESIGNER",
+    "content": "Die Auswahlbalken sind jetzt invertiert. Maximale Lesbarkeit garantiert."
+  }
+]

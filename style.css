@@ -1,0 +1,103 @@
+:root {
+    --bg-color: #050510;
+    --screen-bg: #0000AA; /* Minitel Blau */
+    --text-main: #FFFFFF;
+    --text-dim: #00FFFF;
+    --highlight: #FFFFFF;
+    --highlight-text: #0000AA;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0; padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family: 'VT323', monospace;
+    height: 100vh; width: 100vw;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-transform: uppercase;
+    /* Maus nur verstecken, wenn kein Touchgerät (wird via JS handled oder hier global) */
+    cursor: none;
+    -webkit-tap-highlight-color: transparent; /* Kein blaues Highlight auf Handy */
+}
+
+/* Auf Touch-Geräten den Standard-Cursor wieder erlauben, falls nötig */
+@media (hover: none) {
+    body { cursor: auto; }
+}
+
+#minitel-screen {
+    background-color: var(--screen-bg);
+    width: 100%; max-width: 800px;
+    height: 100%; max-height: 600px;
+    position: relative;
+    display: flex; flex-direction: column;
+    padding: 20px;
+    box-shadow: 0 0 20px var(--screen-bg);
+    border: 2px solid #333;
+}
+
+#scanlines {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%),
+    linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06));
+    background-size: 100% 4px, 6px 100%;
+    pointer-events: none; z-index: 10;
+}
+
+header {
+    display: flex; justify-content: space-between;
+    border-bottom: 2px solid var(--text-main);
+    padding-bottom: 10px; margin-bottom: 20px;
+}
+
+.logo-ascii { font-size: 1.2rem; line-height: 0.8; white-space: pre; color: var(--text-dim); }
+.header-info { text-align: right; }
+.page-indicator { background: var(--text-main); color: var(--screen-bg); padding: 0 5px; font-size: 2rem; }
+
+#content-area { flex-grow: 1; overflow: hidden; position: relative; }
+
+/* LISTEN ANSICHT */
+.post-item {
+    display: flex; justify-content: space-between;
+    padding: 8px 10px; margin-bottom: 5px;
+    border: 1px solid transparent;
+    color: var(--text-dim);
+    cursor: pointer; /* Signalisiert Klickbarkeit auf Mobile */
+    transition: all 0.1s;
+}
+
+/* HIER IST DIE WICHTIGE ÄNDERUNG FÜR SICHTBARKEIT */
+.post-item.active {
+    background-color: var(--text-main); /* Weißer Hintergrund */
+    color: var(--screen-bg);            /* Blaue Schrift */
+    font-weight: bold;
+    border: 1px solid var(--text-main);
+}
+/* Kleiner Pfeil vor dem aktiven Element (optional, ASCII Style) */
+.post-item.active::before {
+    content: "> ";
+    position: absolute;
+    left: 5px;
+}
+
+/* EINZEL POST ANSICHT */
+.single-post { display: none; height: 100%; overflow-y: auto; /* Scrollbar falls Text lang, aber versteckt */ scrollbar-width: none; }
+.single-post::-webkit-scrollbar { display: none; }
+
+.meta-block {
+    margin-bottom: 20px;
+    border-bottom: 1px dotted var(--text-dim);
+    padding-bottom: 10px;
+}
+
+.post-body { font-size: 1.4rem; line-height: 1.4; color: var(--text-main); }
+
+footer {
+    margin-top: auto; border-top: 2px solid var(--text-main);
+    padding-top: 10px; display: flex; justify-content: space-between; font-size: 1.2rem;
+}

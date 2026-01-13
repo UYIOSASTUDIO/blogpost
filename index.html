@@ -1,10 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>3615 BLOG</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-$END$
+
+<div id="minitel-screen">
+    <div id="scanlines"></div>
+
+    <header>
+        <div class="logo-ascii">
+            → IN DE COMMUNICATION
+            ////// BLOG SYSTEM
+        </div>
+        <div class="header-info">
+            <div>SEITE</div>
+            <div class="page-indicator" id="page-num">01</div>
+        </div>
+    </header>
+
+    <div id="content-area">
+        <div id="list-view">
+        </div>
+        <div id="post-view" class="single-post">
+        </div>
+    </div>
+
+    <footer>
+        <div id="footer-left">NACHRICHTEN DIENST</div>
+        <div id="footer-right">
+            <span id="nav-hint">LADE...</span>
+        </div>
+    </footer>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
