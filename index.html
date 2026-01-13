@@ -10,40 +10,47 @@
 </head>
 <body>
 
-<div id="desktop-bg"></div>
+<div id="desktop-area">
+    <div id="blog-icon" class="desktop-icon selected">
+        <div class="icon-graphic"></div>
+        <span class="icon-label">BLOG.EXE</span>
+    </div>
+</div>
 
-<div id="minitel-screen" class="window-frame">
-    <div id="scanlines"></div>
-
-    <header id="window-header">
-        <div class="logo-section">
-            <div class="top-line">→ 3615 BLOG SYSTEM</div>
-            <div class="ascii-logo">
-                /////<br>
-                /////<br>
-                /////
-            </div>
+<div id="window-wrapper">
+    <div class="title-bar">
+        <div class="window-controls">
+            <div class="win-btn"></div>
         </div>
-
-        <div class="header-block">
-            11 T
+        <div class="title-text">/// SYSTEM 3615 ///</div>
+        <div class="window-controls">
+            <div class="win-btn"></div>
+            <div class="win-btn"></div>
         </div>
-    </header>
-
-    <div id="content-area">
-        <div id="list-view"></div>
-        <div id="post-view" class="single-post"></div>
     </div>
 
-    <footer id="desktop-footer">
-        <div class="menu-box">
-            <div class="menu-item" id="hint-select">WÄHLEN</div>
-            <div class="menu-key">ENTER</div>
+    <div id="minitel-screen">
+        <div id="scanlines"></div>
 
-            <div class="menu-item" id="hint-nav">NAVIG.</div>
-            <div class="menu-key">↓ ↑</div>
+        <header>
+            <div class="logo-section">
+                <div class="top-line">→ 3615 BLOG SYSTEM</div>
+                <div style="line-height:0.6; opacity:0.8;">
+                    /////<br>/////<br>/////
+                </div>
+            </div>
+            <div class="header-block">11 T</div>
+        </header>
+
+        <div id="content-area">
+            <div id="list-view"></div>
+            <div id="post-view" class="single-post"></div>
         </div>
-    </footer>
+
+        <footer style="margin-top:auto; text-align:right; font-size:1rem; opacity:0.6;">
+            <span id="desktop-hint">CMD+ARROWS: MOVE | CMD+BACKSPACE: CLOSE</span>
+        </footer>
+    </div>
 </div>
 
 <script src="script.js"></script>

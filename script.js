@@ -1,12 +1,20 @@
+// --- STATE ---
 let posts = [];
 let viewState = 'list';
 let selectedIndex = 0;
 let currentPostId = null;
 
+// Desktop OS State
+let isWindowOpen = true;
+let winX = 50; // Prozent
+let winY = 50; // Prozent
+let winScale = 1.0;
+
+// DOM Elemente
 const listView = document.getElementById('list-view');
 const postView = document.getElementById('post-view');
-const hintSelect = document.getElementById('hint-select');
-const hintNav = document.getElementById('hint-nav');
+const windowWrapper = document.getElementById('window-wrapper');
+const blogIcon = document.getElementById('blog-icon');
 
 // --- INIT ---
 async function loadPosts() {
@@ -15,68 +23,110 @@ async function loadPosts() {
         posts = await response.json();
         renderList();
     } catch (e) {
-        listView.innerHTML = "FEHLER: DATENBANK OFF-LINE.";
+        listView.innerHTML = "OFF-LINE.";
     }
 }
 
-// --- RENDER LISTE (Update für die Dots) ---
+// --- RENDER FUNKTIONEN (Wie vorher) ---
 function renderList() {
     viewState = 'list';
     postView.style.display = 'none';
-    listView.style.display = 'flex';
-    listView.style.flexDirection = 'column';
-
-    if(hintSelect) hintSelect.innerText = "ÖFFNEN";
+    listView.style.display = 'flex'; listView.style.flexDirection = 'column';
 
     listView.innerHTML = '';
-
     const listHeader = document.createElement('div');
-    listHeader.style.marginBottom = "10px";
-    listHeader.innerHTML = "INDEX DES POSTS: <br>----------------";
+    listHeader.innerHTML = "INDEX:<br>------";
     listView.appendChild(listHeader);
 
     posts.forEach((post, index) => {
         const div = document.createElement('div');
         div.className = `post-item ${index === selectedIndex ? 'active' : ''}`;
-        div.innerHTML = `
-            <span>${post.title}</span>
-            <span class="dots-filler"></span>
-            <span>${post.date}</span>
-        `;
-
-        div.onclick = () => {
-            selectedIndex = index;
-            renderList();
-            openPost(index);
-        };
+        div.innerHTML = `<span>${post.title}</span><span class="dots-filler"></span><span>${post.date}</span>`;
+        // Mobile Touch Support
+        div.onclick = () => { selectedIndex = index; renderList(); openPost(index); };
         listView.appendChild(div);
     });
 }
 
-// --- RENDER POST ---
 function openPost(index) {
     if (!posts[index]) return;
     viewState = 'post';
     currentPostId = index;
     selectedIndex = index;
-
     listView.style.display = 'none';
     postView.style.display = 'block';
-
-    if(hintSelect) hintSelect.innerText = "ZURÜCK";
-
     const post = posts[index];
     postView.innerHTML = `
         <div class="meta-row"><span class="label">TITEL:</span><span class="value">${post.title}</span></div>
-        <div class="meta-row"><span class="label">RUBRIK:</span><span class="value">${post.location}</span></div>
-        <div class="meta-row"><span class="label">AUTOR:</span><span class="value">${post.author}</span></div>
+        <div class="meta-row"><span class="label">ORT:</span><span class="value">${post.location}</span></div>
         <div class="post-body">${post.content}</div>
     `;
 }
 
-// --- KEYBOARD NAVIGATION ---
+// --- WINDOW MANAGEMENT LOGIK ---
+function updateWindowPosition() {
+    if (!isWindowOpen) {
+        windowWrapper.style.display = 'none';
+        blogIcon.style.display = 'flex';
+        return;
+    }
+    windowWrapper.style.display = 'flex';
+    blogIcon.style.display = 'none';
+
+    // Position aktualisieren
+    windowWrapper.style.left = `${winX}%`;
+    windowWrapper.style.top = `${winY}%`;
+
+    // Größe aktualisieren (Scale simuliert Resizing)
+    windowWrapper.style.transform = `translate(-50%, -50%) scale(${winScale})`;
+}
+
+// --- HAUPT INPUT HANDLER ---
 document.addEventListener('keydown', (e) => {
-    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) e.preventDefault();
+    // Check ob Mobile (dann keine Desktop-Logik)
+    if (window.innerWidth <= 800) {
+        handleMobileInput(e);
+        return;
+    }
+
+    // 1. WINDOW MANAGEMENT (Mit CMD/CTRL oder ALT)
+    // Wir nutzen CMD (Meta) oder CTRL
+    if (e.metaKey || e.ctrlKey) {
+        e.preventDefault(); // Verhindert Browser Zoom etc.
+
+        if (!isWindowOpen) return; // Wenn zu, keine Manipulation
+
+        // VERSCHIEBEN (CMD + Arrows)
+        const moveStep = 2; // Prozent
+        if (e.key === 'ArrowRight') winX = Math.min(95, winX + moveStep);
+        if (e.key === 'ArrowLeft') winX = Math.max(5, winX - moveStep);
+        if (e.key === 'ArrowUp') winY = Math.max(5, winY - moveStep);
+        if (e.key === 'ArrowDown') winY = Math.min(95, winY + moveStep);
+
+        // RESIZEN (CMD + / -)
+        if (e.key === '+' || e.key === '=') winScale = Math.min(1.5, winScale + 0.1);
+        if (e.key === '-') winScale = Math.max(0.5, winScale - 0.1);
+
+        // SCHLIEßEN (CMD + Backspace)
+        if (e.key === 'Backspace') {
+            isWindowOpen = false;
+        }
+
+        updateWindowPosition();
+        return;
+    }
+
+    // 2. DESKTOP MODE (Wenn Fenster zu ist)
+    if (!isWindowOpen) {
+        if (e.key === 'Enter') {
+            isWindowOpen = true;
+            updateWindowPosition();
+        }
+        return;
+    }
+
+    // 3. APP NAVIGATION (Nur wenn Fenster offen und kein CMD gedrückt)
+    if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
 
     if (viewState === 'list') {
         if (e.key === 'ArrowDown') { selectedIndex = (selectedIndex + 1) % posts.length; renderList(); }
@@ -86,68 +136,32 @@ document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' || e.key === 'Backspace') { renderList(); }
         else if (e.key === 'ArrowRight') { openPost((currentPostId + 1) % posts.length); }
         else if (e.key === 'ArrowLeft') { openPost((currentPostId - 1 + posts.length) % posts.length); }
-        else if (e.key === 'Enter') { renderList(); }
     }
 });
 
-// --- TOUCH SWIPE ---
+// Fallback für Mobile (ohne CMD Logic)
+function handleMobileInput(e) {
+    // Gleiche Navi Logik wie oben, nur ohne Window Management
+    if (viewState === 'list') {
+        if (e.key === 'ArrowDown') { selectedIndex = (selectedIndex + 1) % posts.length; renderList(); }
+        if (e.key === 'ArrowUp') { selectedIndex = (selectedIndex - 1 + posts.length) % posts.length; renderList(); }
+        if (e.key === 'Enter') openPost(selectedIndex);
+    } else {
+        if (e.key === 'Escape') renderList();
+    }
+}
+
+// Touch Support (bleibt gleich)
 let touchStartX = 0;
-let touchEndX = 0;
 document.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX);
 document.addEventListener('touchend', e => {
-    touchEndX = e.changedTouches[0].screenX;
     if (viewState === 'post') {
+        let touchEndX = e.changedTouches[0].screenX;
         if (touchEndX < touchStartX - 50) openPost((currentPostId + 1) % posts.length);
         if (touchEndX > touchStartX + 50) openPost((currentPostId - 1 + posts.length) % posts.length);
     }
 });
-document.querySelector('header').addEventListener('click', () => { if(viewState === 'post') renderList(); });
 
-// --- DRAGGABLE WINDOW LOGIC (Nur Desktop) ---
-const win = document.getElementById('minitel-screen');
-const header = document.querySelector('header');
-let isDragging = false;
-let startX, startY, initialLeft, initialTop;
-
-// Wir nutzen nur Maus-Events fürs Dragging, da Mobile Touch anders funktioniert
-header.addEventListener('mousedown', (e) => {
-    // Check ob wir im Desktop Modus sind (Breite > 800)
-    if (window.innerWidth <= 800) return;
-
-    isDragging = true;
-
-    // Position der Maus relativ zum Fenster
-    startX = e.clientX;
-    startY = e.clientY;
-
-    // Aktuelle Position des Fensters holen
-    const rect = win.getBoundingClientRect();
-
-    // Wir müssen das "transform: translate(-50%, -50%)" entfernen, sobald wir draggen,
-    // sonst springt das Fenster. Wir setzen es auf absolute Pixel-Werte.
-    win.style.transform = 'none';
-    win.style.left = rect.left + 'px';
-    win.style.top = rect.top + 'px';
-
-    initialLeft = rect.left;
-    initialTop = rect.top;
-
-    document.body.style.cursor = 'move';
-});
-
-document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-
-    win.style.left = (initialLeft + dx) + 'px';
-    win.style.top = (initialTop + dy) + 'px';
-});
-
-document.addEventListener('mouseup', () => {
-    isDragging = false;
-    document.body.style.cursor = ''; // Reset cursor (oder wieder auf custom url setzen via CSS)
-});
-
+// Start
 loadPosts();
+updateWindowPosition(); // Setzt initiale Position
