@@ -4,17 +4,33 @@ let viewState = 'list';
 let selectedIndex = 0;
 let currentPostId = null;
 
-// Desktop OS State
+// Desktop System State
+let isMobile = false; // Wird beim Start gecheckt
+let systemFocus = 'app'; // 'app' (Fenster) oder 'desktop' (Icons)
 let isWindowOpen = true;
-let winX = 50; // Prozent
-let winY = 50; // Prozent
+
+// Window Position State
+let winX = 50;
+let winY = 50;
 let winScale = 1.0;
+
+// Icon Selection State
+let selectedIconIndex = 0;
+const icons = ['icon-blog', 'icon-trash']; // IDs der Icons
 
 // DOM Elemente
 const listView = document.getElementById('list-view');
 const postView = document.getElementById('post-view');
 const windowWrapper = document.getElementById('window-wrapper');
-const blogIcon = document.getElementById('blog-icon');
+const desktopHint = document.getElementById('desktop-hint');
+
+// --- CHECK MOBILE ---
+function checkMobile() {
+    // Einfacher Check: Breite unter 800px
+    isMobile = window.innerWidth <= 800;
+}
+window.addEventListener('resize', checkMobile);
+checkMobile(); // Sofort ausführen
 
 // --- INIT ---
 async function loadPosts() {
@@ -27,12 +43,11 @@ async function loadPosts() {
     }
 }
 
-// --- RENDER FUNKTIONEN (Wie vorher) ---
+// --- RENDER FUNKTIONEN ---
 function renderList() {
     viewState = 'list';
     postView.style.display = 'none';
     listView.style.display = 'flex'; listView.style.flexDirection = 'column';
-
     listView.innerHTML = '';
     const listHeader = document.createElement('div');
     listHeader.innerHTML = "INDEX:<br>------";
@@ -42,7 +57,6 @@ function renderList() {
         const div = document.createElement('div');
         div.className = `post-item ${index === selectedIndex ? 'active' : ''}`;
         div.innerHTML = `<span>${post.title}</span><span class="dots-filler"></span><span>${post.date}</span>`;
-        // Mobile Touch Support
         div.onclick = () => { selectedIndex = index; renderList(); openPost(index); };
         listView.appendChild(div);
     });
@@ -63,95 +77,133 @@ function openPost(index) {
     `;
 }
 
-// --- WINDOW MANAGEMENT LOGIK ---
-function updateWindowPosition() {
+// --- WINDOW & DESKTOP SYSTEM ---
+
+// Aktualisiert das Aussehen je nach Fokus
+function updateFocusVisuals() {
+    if (isMobile) return; // Auf Handy egal
+
+    // Icons aktualisieren
+    icons.forEach((id, idx) => {
+        const el = document.getElementById(id);
+        if (systemFocus === 'desktop' && idx === selectedIconIndex) {
+            el.classList.add('selected');
+        } else {
+            el.classList.remove('selected');
+        }
+    });
+
+    // Fenster Aussehen
     if (!isWindowOpen) {
         windowWrapper.style.display = 'none';
-        blogIcon.style.display = 'flex';
-        return;
+    } else {
+        windowWrapper.style.display = 'flex';
+        // Wenn Fokus auf Desktop liegt, Fenster grau machen
+        if (systemFocus === 'desktop') {
+            windowWrapper.classList.add('inactive');
+        } else {
+            windowWrapper.classList.remove('inactive');
+        }
     }
-    windowWrapper.style.display = 'flex';
-    blogIcon.style.display = 'none';
+}
 
-    // Position aktualisieren
+function updateWindowPosition() {
+    if (isMobile) return; // Nicht auf Handy anwenden!
+
+    // Position aktualisieren (nur wenn nicht mobile)
     windowWrapper.style.left = `${winX}%`;
     windowWrapper.style.top = `${winY}%`;
-
-    // Größe aktualisieren (Scale simuliert Resizing)
     windowWrapper.style.transform = `translate(-50%, -50%) scale(${winScale})`;
 }
 
-// --- HAUPT INPUT HANDLER ---
+// --- INPUT HANDLER ---
 document.addEventListener('keydown', (e) => {
-    // Check ob Mobile (dann keine Desktop-Logik)
-    if (window.innerWidth <= 800) {
-        handleMobileInput(e);
+
+    // 1. MOBILE LOGIK (Einfach halten)
+    if (isMobile) {
+        if (viewState === 'list') {
+            if (e.key === 'ArrowDown') { selectedIndex = (selectedIndex + 1) % posts.length; renderList(); }
+            if (e.key === 'ArrowUp') { selectedIndex = (selectedIndex - 1 + posts.length) % posts.length; renderList(); }
+            if (e.key === 'Enter') openPost(selectedIndex);
+        } else {
+            if (e.key === 'Escape') renderList();
+        }
+        return; // Desktop Logik abbrechen
+    }
+
+    // 2. FOCUS SWITCH (CTRL + SPACE)
+    if (e.code === 'Space' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        // Toggle
+        systemFocus = (systemFocus === 'app') ? 'desktop' : 'app';
+        updateFocusVisuals();
         return;
     }
 
-    // 1. WINDOW MANAGEMENT (Mit CMD/CTRL oder ALT)
-    // Wir nutzen CMD (Meta) oder CTRL
+    // 3. WINDOW COMMANDS (CMD + ...)
     if (e.metaKey || e.ctrlKey) {
-        e.preventDefault(); // Verhindert Browser Zoom etc.
+        if (systemFocus !== 'app' || !isWindowOpen) return;
 
-        if (!isWindowOpen) return; // Wenn zu, keine Manipulation
-
-        // VERSCHIEBEN (CMD + Arrows)
-        const moveStep = 2; // Prozent
+        e.preventDefault();
+        const moveStep = 2;
         if (e.key === 'ArrowRight') winX = Math.min(95, winX + moveStep);
         if (e.key === 'ArrowLeft') winX = Math.max(5, winX - moveStep);
         if (e.key === 'ArrowUp') winY = Math.max(5, winY - moveStep);
         if (e.key === 'ArrowDown') winY = Math.min(95, winY + moveStep);
-
-        // RESIZEN (CMD + / -)
         if (e.key === '+' || e.key === '=') winScale = Math.min(1.5, winScale + 0.1);
         if (e.key === '-') winScale = Math.max(0.5, winScale - 0.1);
 
-        // SCHLIEßEN (CMD + Backspace)
+        // Fenster schließen
         if (e.key === 'Backspace') {
             isWindowOpen = false;
+            systemFocus = 'desktop'; // Fokus muss auf Desktop gehen
+            updateFocusVisuals();
         }
 
         updateWindowPosition();
         return;
     }
 
-    // 2. DESKTOP MODE (Wenn Fenster zu ist)
-    if (!isWindowOpen) {
+    // 4. DESKTOP NAVIGATION (Wenn Fokus auf Desktop)
+    if (systemFocus === 'desktop') {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+            selectedIconIndex = (selectedIconIndex + 1) % icons.length;
+            updateFocusVisuals();
+        }
+        if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+            selectedIconIndex = (selectedIconIndex - 1 + icons.length) % icons.length;
+            updateFocusVisuals();
+        }
         if (e.key === 'Enter') {
-            isWindowOpen = true;
-            updateWindowPosition();
+            // Aktion ausführen
+            const action = document.getElementById(icons[selectedIconIndex]).dataset.action;
+            if (action === 'open-blog') {
+                isWindowOpen = true;
+                systemFocus = 'app';
+                updateFocusVisuals();
+                updateWindowPosition();
+            }
         }
         return;
     }
 
-    // 3. APP NAVIGATION (Nur wenn Fenster offen und kein CMD gedrückt)
-    if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
+    // 5. APP NAVIGATION (Normaler Blog)
+    if (systemFocus === 'app' && isWindowOpen) {
+        if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
 
-    if (viewState === 'list') {
-        if (e.key === 'ArrowDown') { selectedIndex = (selectedIndex + 1) % posts.length; renderList(); }
-        else if (e.key === 'ArrowUp') { selectedIndex = (selectedIndex - 1 + posts.length) % posts.length; renderList(); }
-        else if (e.key === 'Enter') { openPost(selectedIndex); }
-    } else if (viewState === 'post') {
-        if (e.key === 'Escape' || e.key === 'Backspace') { renderList(); }
-        else if (e.key === 'ArrowRight') { openPost((currentPostId + 1) % posts.length); }
-        else if (e.key === 'ArrowLeft') { openPost((currentPostId - 1 + posts.length) % posts.length); }
+        if (viewState === 'list') {
+            if (e.key === 'ArrowDown') { selectedIndex = (selectedIndex + 1) % posts.length; renderList(); }
+            else if (e.key === 'ArrowUp') { selectedIndex = (selectedIndex - 1 + posts.length) % posts.length; renderList(); }
+            else if (e.key === 'Enter') { openPost(selectedIndex); }
+        } else if (viewState === 'post') {
+            if (e.key === 'Escape' || e.key === 'Backspace') { renderList(); }
+            else if (e.key === 'ArrowRight') { openPost((currentPostId + 1) % posts.length); }
+            else if (e.key === 'ArrowLeft') { openPost((currentPostId - 1 + posts.length) % posts.length); }
+        }
     }
 });
 
-// Fallback für Mobile (ohne CMD Logic)
-function handleMobileInput(e) {
-    // Gleiche Navi Logik wie oben, nur ohne Window Management
-    if (viewState === 'list') {
-        if (e.key === 'ArrowDown') { selectedIndex = (selectedIndex + 1) % posts.length; renderList(); }
-        if (e.key === 'ArrowUp') { selectedIndex = (selectedIndex - 1 + posts.length) % posts.length; renderList(); }
-        if (e.key === 'Enter') openPost(selectedIndex);
-    } else {
-        if (e.key === 'Escape') renderList();
-    }
-}
-
-// Touch Support (bleibt gleich)
+// Touch Swipe (Bleibt gleich)
 let touchStartX = 0;
 document.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX);
 document.addEventListener('touchend', e => {
@@ -161,7 +213,10 @@ document.addEventListener('touchend', e => {
         if (touchEndX > touchStartX + 50) openPost((currentPostId - 1 + posts.length) % posts.length);
     }
 });
+document.querySelector('header').addEventListener('click', () => { if(viewState === 'post') renderList(); });
 
 // Start
 loadPosts();
-updateWindowPosition(); // Setzt initiale Position
+checkMobile();
+updateFocusVisuals();
+updateWindowPosition();

@@ -11,9 +11,14 @@
 <body>
 
 <div id="desktop-area">
-    <div id="blog-icon" class="desktop-icon selected">
+    <div id="icon-blog" class="desktop-icon selected" data-action="open-blog">
         <div class="icon-graphic"></div>
         <span class="icon-label">BLOG.EXE</span>
+    </div>
+
+    <div id="icon-trash" class="desktop-icon" data-action="trash">
+        <div class="icon-graphic" style="border-style:dashed;"></div>
+        <span class="icon-label">TRASH</span>
     </div>
 </div>
 
@@ -48,7 +53,7 @@
         </div>
 
         <footer style="margin-top:auto; text-align:right; font-size:1rem; opacity:0.6;">
-            <span id="desktop-hint">CMD+ARROWS: MOVE | CMD+BACKSPACE: CLOSE</span>
+            <span id="desktop-hint">SWITCH: CTRL+SPACE | MOVE: CMD+ARROWS</span>
         </footer>
     </div>
 </div>
