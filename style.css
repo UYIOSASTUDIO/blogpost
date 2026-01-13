@@ -2,14 +2,12 @@
     --bg-color: #020205;
     --crt-blue: #547698;
     --text-white: #EBEFEF;
-    --scanline: rgba(0, 0, 0, 0.5);
-    --desktop-pattern: #1a1a24;
     --window-border: #EBEFEF;
-    --window-inactive: #444; /* Farbe für inaktive Titlebar */
+    --window-inactive: #444;
+    --desktop-pattern: #1a1a24;
 }
 
 * { box-sizing: border-box; }
-
 html { background-color: var(--bg-color); }
 
 body {
@@ -20,169 +18,103 @@ body {
     font-family: 'VT323', monospace;
     height: 100dvh; width: 100%;
     overflow: hidden;
-    cursor: none;
-    user-select: none;
+    cursor: none; user-select: none;
 }
 
-/* --- DESKTOP AREA --- */
+/* --- DESKTOP --- */
 #desktop-area {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: var(--bg-color);
     background-image: radial-gradient(var(--desktop-pattern) 15%, transparent 16%),
     radial-gradient(var(--desktop-pattern) 15%, transparent 16%);
     background-size: 4px 4px;
     z-index: 1;
-    /* Grid für Icons */
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 20px;
-    gap: 20px;
+    display: flex; flex-direction: column; align-items: flex-start;
+    padding: 20px; gap: 20px;
 }
 
-/* --- ICONS --- */
 .desktop-icon {
-    display: flex; /* Immer sichtbar! */
-    flex-direction: column;
-    align-items: center;
-    width: 80px;
-    text-align: center;
-    color: var(--text-white);
-    opacity: 0.7; /* Standardmäßig leicht transparent */
-    transition: opacity 0.2s;
+    display: flex; flex-direction: column; align-items: center;
+    width: 80px; text-align: center; color: var(--text-white);
+    opacity: 0.7; transition: opacity 0.2s;
 }
+.desktop-icon.selected { opacity: 1; }
+.desktop-icon.selected .icon-graphic { background: var(--text-white); color: var(--bg-color); }
+.desktop-icon.selected .icon-label { background: var(--crt-blue); padding: 0 4px; }
 
 .icon-graphic {
-    width: 50px; height: 50px;
-    border: 2px solid var(--text-white);
-    background: var(--bg-color);
-    position: relative;
-    margin-bottom: 5px;
+    width: 50px; height: 50px; border: 2px solid var(--text-white);
+    background: var(--bg-color); position: relative; margin-bottom: 5px;
     box-shadow: 4px 4px 0 #000;
 }
 
-.icon-graphic::after {
-    content: "FILE";
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 14px;
-}
-
-/* Wenn Desktop Fokus hat und Icon ausgewählt ist */
-.desktop-icon.selected {
-    opacity: 1;
-}
-.desktop-icon.selected .icon-graphic {
-    background: var(--text-white);
-    color: var(--bg-color);
-}
-.desktop-icon.selected .icon-label {
-    background: var(--crt-blue);
-    padding: 0 4px;
-}
-
-/* --- FENSTER CONTAINER --- */
-#window-wrapper {
+/* --- WINDOW GENERAL --- */
+.window-wrapper {
     position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 700px;
-    display: flex;
-    flex-direction: column;
+    display: flex; flex-direction: column;
     box-shadow: 10px 10px 0px rgba(0,0,0,0.8);
-    z-index: 100;
     transition: width 0.1s, height 0.1s;
+    background: var(--bg-color);
 }
 
-/* --- TITLE BAR --- */
+/* Aktives Fenster ist oben (z-index) und hat schwarze Schatten */
+.window-wrapper.active { z-index: 100; border: 2px solid var(--window-border); }
+/* Inaktives Fenster ist weiter hinten */
+.window-wrapper.inactive { z-index: 50; border: 2px solid var(--window-inactive); box-shadow: none; opacity: 0.8; }
+
 .title-bar {
-    height: 30px;
-    background: var(--window-border);
-    color: #000;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 5px;
-    font-weight: bold;
-    border-bottom: 2px solid #000;
-    transition: background 0.2s;
+    height: 30px; border-bottom: 2px solid #000;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 5px; font-weight: bold;
 }
-
-/* Style für wenn das Fenster NICHT den Fokus hat */
-#window-wrapper.inactive .title-bar {
-    background: var(--window-inactive);
-    color: #888;
-}
-#window-wrapper.inactive {
-    box-shadow: none;
-    border-color: var(--window-inactive);
-}
-#window-wrapper.inactive #minitel-screen {
-    border-color: var(--window-inactive);
-    opacity: 0.9; /* Fenster wird leicht dunkler */
-}
+.window-wrapper.active .title-bar { background: var(--window-border); color: #000; }
+.window-wrapper.inactive .title-bar { background: var(--window-inactive); color: #888; }
 
 .title-text { flex-grow: 1; text-align: center; letter-spacing: 2px; }
-.window-controls { display: flex; gap: 4px; }
 .win-btn { width: 15px; height: 15px; border: 1px solid #000; background: #fff; }
 
-/* --- SCREEN INHALT --- */
-#minitel-screen {
-    background-color: var(--bg-color);
-    flex-grow: 1;
-    border: 2px solid var(--window-border);
-    border-top: none;
-    padding: 15px;
-    font-size: 1.5rem;
-    letter-spacing: 1px;
-    position: relative;
-    height: 500px;
-}
+/* --- SPECIFIC WINDOWS --- */
+/* Blog Window Styles */
+#win-blog { width: 700px; height: 500px; }
+#blog-screen { flex-grow: 1; padding: 15px; overflow: hidden; position: relative; display: flex; flex-direction: column;}
 
+/* Help Window Styles */
+#win-help { width: 320px; height: 450px; }
+#help-screen {
+    flex-grow: 1; padding: 20px; overflow-y: auto;
+    font-size: 1.2rem; line-height: 1.4;
+    border-top: none;
+}
+.help-entry { margin-bottom: 15px; border-bottom: 1px dashed #444; padding-bottom: 5px; }
+.key-combo { color: var(--crt-blue); font-weight: bold; display: block; margin-bottom: 2px; }
+
+/* --- SHARED INTERNALS --- */
 #scanlines {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
     background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
     linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-    background-size: 100% 3px, 3px 100%;
-    pointer-events: none; z-index: 999;
+    background-size: 100% 3px, 3px 100%; pointer-events: none; z-index: 999;
 }
 
 header { display: flex; justify-content: space-between; margin-bottom: 20px; }
 .header-block { background-color: var(--crt-blue); color: var(--text-white); padding: 5px 15px; font-weight: bold; box-shadow: 4px 4px 0px rgba(0,0,0,0.5); }
 .dots-filler { flex-grow: 1; border-bottom: 2px dotted var(--text-white); margin: 0 10px 5px 10px; opacity: 0.5; }
-
 .post-item { display: flex; justify-content: space-between; align-items: flex-end; padding: 2px 5px; margin-bottom: 8px; border: 1px solid transparent; }
-.post-item.active { background-color: var(--crt-blue); color: var(--text-white); box-shadow: 2px 2px 0 rgba(0,0,0,0.8); }
+.post-item.active { background-color: var(--crt-blue); color: var(--text-white); }
 .post-item.active .dots-filler { opacity: 1; }
-
 .single-post { display: none; height: 100%; overflow-y: auto; scrollbar-width: none; }
 .single-post::-webkit-scrollbar { display: none; }
 .meta-row { display: flex; margin-bottom: 10px; }
 .label { width: 140px; } .value { flex-grow: 1; border-bottom: 2px dotted var(--text-white); }
 .post-body { margin-top: 30px; line-height: 1.4; white-space: pre-line; }
 
-/* --- MOBILE RETTUNG (WICHTIG!) --- */
+/* --- MOBILE --- */
 @media (max-width: 800px) {
-    #desktop-area, .title-bar { display: none !important; } /* Desktop Kram weg */
-
-    /* Zwingt das Fenster in den Vollbild Modus und überschreibt JS Styles */
-    #window-wrapper {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        transform: none !important;
-        width: 100% !important;
-        height: 100dvh !important;
-        box-shadow: none !important;
-        border: none !important;
-        z-index: 1000 !important;
+    #desktop-area, .title-bar, #win-help { display: none !important; }
+    #win-blog {
+        position: fixed !important; top: 0 !important; left: 0 !important;
+        transform: none !important; width: 100% !important; height: 100dvh !important;
+        box-shadow: none !important; border: none !important; z-index: 1000 !important;
     }
-
-    #minitel-screen {
-        height: 100% !important;
-        border: none !important;
-        padding: 15px !important;
-    }
-
-    body { cursor: auto; } /* Maus/Touch auf Handy erlauben */
+    #blog-screen { padding: 10px !important; }
+    body { cursor: auto; }
 }

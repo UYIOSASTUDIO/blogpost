@@ -1,72 +1,69 @@
-// --- STATE ---
+// --- CONFIG & STATE ---
+// Apps Definition mit asymmetrischen Startpositionen
+const apps = {
+    blog: {
+        id: 'win-blog', iconId: 'icon-blog', open: true,
+        x: 42, y: 55, scale: 1.0 // Leicht links unten
+    },
+    help: {
+        id: 'win-help', iconId: 'icon-help', open: true,
+        x: 75, y: 40, scale: 1.0 // Rechts oben
+    }
+};
+
+let activeApp = 'blog'; // Welches Fenster ist gerade "oben"?
+let systemFocus = 'app'; // 'app' (Fenster Bedienung) oder 'desktop' (Icons)
+let isMobile = false;
+let selectedIconIndex = 0;
+const iconKeys = ['blog', 'help']; // Reihenfolge auf Desktop
+
+// Blog Data State
 let posts = [];
 let viewState = 'list';
-let selectedIndex = 0;
+let selectedPostIndex = 0;
 let currentPostId = null;
 
-// Desktop System State
-let isMobile = false; // Wird beim Start gecheckt
-let systemFocus = 'app'; // 'app' (Fenster) oder 'desktop' (Icons)
-let isWindowOpen = true;
-
-// Window Position State
-let winX = 50;
-let winY = 50;
-let winScale = 1.0;
-
-// Icon Selection State
-let selectedIconIndex = 0;
-const icons = ['icon-blog', 'icon-trash']; // IDs der Icons
-
-// DOM Elemente
+// DOM Helpers
 const listView = document.getElementById('list-view');
 const postView = document.getElementById('post-view');
-const windowWrapper = document.getElementById('window-wrapper');
-const desktopHint = document.getElementById('desktop-hint');
-
-// --- CHECK MOBILE ---
-function checkMobile() {
-    // Einfacher Check: Breite unter 800px
-    isMobile = window.innerWidth <= 800;
-}
-window.addEventListener('resize', checkMobile);
-checkMobile(); // Sofort ausführen
 
 // --- INIT ---
-async function loadPosts() {
-    try {
-        const response = await fetch('posts.json');
-        posts = await response.json();
-        renderList();
-    } catch (e) {
-        listView.innerHTML = "OFF-LINE.";
-    }
+function init() {
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    loadPosts();
+    updateVisuals(); // Setzt Startpositionen
 }
 
-// --- RENDER FUNKTIONEN ---
-function renderList() {
+function checkMobile() { isMobile = window.innerWidth <= 800; }
+
+async function loadPosts() {
+    try {
+        const r = await fetch('posts.json');
+        posts = await r.json();
+        renderBlogList();
+    } catch (e) { listView.innerHTML = "ERR: DB LOST."; }
+}
+
+// --- RENDERING ---
+function renderBlogList() {
     viewState = 'list';
     postView.style.display = 'none';
     listView.style.display = 'flex'; listView.style.flexDirection = 'column';
-    listView.innerHTML = '';
-    const listHeader = document.createElement('div');
-    listHeader.innerHTML = "INDEX:<br>------";
-    listView.appendChild(listHeader);
+    listView.innerHTML = '<div style="margin-bottom:10px;">INDEX:<br>------</div>';
 
     posts.forEach((post, index) => {
         const div = document.createElement('div');
-        div.className = `post-item ${index === selectedIndex ? 'active' : ''}`;
+        div.className = `post-item ${index === selectedPostIndex ? 'active' : ''}`;
         div.innerHTML = `<span>${post.title}</span><span class="dots-filler"></span><span>${post.date}</span>`;
-        div.onclick = () => { selectedIndex = index; renderList(); openPost(index); };
+        div.onclick = () => { selectedPostIndex = index; renderBlogList(); openBlogPost(index); };
         listView.appendChild(div);
     });
 }
 
-function openPost(index) {
-    if (!posts[index]) return;
+function openBlogPost(index) {
     viewState = 'post';
     currentPostId = index;
-    selectedIndex = index;
     listView.style.display = 'none';
     postView.style.display = 'block';
     const post = posts[index];
@@ -77,146 +74,160 @@ function openPost(index) {
     `;
 }
 
-// --- WINDOW & DESKTOP SYSTEM ---
+// --- SYSTEM VISUALS ENGINE ---
+function updateVisuals() {
+    if (isMobile) return;
 
-// Aktualisiert das Aussehen je nach Fokus
-function updateFocusVisuals() {
-    if (isMobile) return; // Auf Handy egal
-
-    // Icons aktualisieren
-    icons.forEach((id, idx) => {
-        const el = document.getElementById(id);
-        if (systemFocus === 'desktop' && idx === selectedIconIndex) {
-            el.classList.add('selected');
-        } else {
-            el.classList.remove('selected');
-        }
+    // 1. Desktop Icons
+    iconKeys.forEach((key, idx) => {
+        const el = document.getElementById(apps[key].iconId);
+        if (systemFocus === 'desktop' && idx === selectedIconIndex) el.classList.add('selected');
+        else el.classList.remove('selected');
     });
 
-    // Fenster Aussehen
-    if (!isWindowOpen) {
-        windowWrapper.style.display = 'none';
-    } else {
-        windowWrapper.style.display = 'flex';
-        // Wenn Fokus auf Desktop liegt, Fenster grau machen
-        if (systemFocus === 'desktop') {
-            windowWrapper.classList.add('inactive');
+    // 2. Windows Management
+    for (const [key, app] of Object.entries(apps)) {
+        const win = document.getElementById(app.id);
+
+        if (!app.open) {
+            win.style.display = 'none';
+            continue;
+        }
+        win.style.display = 'flex';
+
+        // Position & Scale
+        win.style.left = `${app.x}%`;
+        win.style.top = `${app.y}%`;
+        win.style.transform = `translate(-50%, -50%) scale(${app.scale})`;
+
+        // Active / Inactive State (Visuals & Z-Index)
+        if (activeApp === key && systemFocus === 'app') {
+            win.classList.add('active');
+            win.classList.remove('inactive');
         } else {
-            windowWrapper.classList.remove('inactive');
+            win.classList.remove('active');
+            win.classList.add('inactive');
         }
     }
-}
-
-function updateWindowPosition() {
-    if (isMobile) return; // Nicht auf Handy anwenden!
-
-    // Position aktualisieren (nur wenn nicht mobile)
-    windowWrapper.style.left = `${winX}%`;
-    windowWrapper.style.top = `${winY}%`;
-    windowWrapper.style.transform = `translate(-50%, -50%) scale(${winScale})`;
 }
 
 // --- INPUT HANDLER ---
 document.addEventListener('keydown', (e) => {
+    if (isMobile) return handleMobileInput(e);
 
-    // 1. MOBILE LOGIK (Einfach halten)
-    if (isMobile) {
-        if (viewState === 'list') {
-            if (e.key === 'ArrowDown') { selectedIndex = (selectedIndex + 1) % posts.length; renderList(); }
-            if (e.key === 'ArrowUp') { selectedIndex = (selectedIndex - 1 + posts.length) % posts.length; renderList(); }
-            if (e.key === 'Enter') openPost(selectedIndex);
-        } else {
-            if (e.key === 'Escape') renderList();
-        }
-        return; // Desktop Logik abbrechen
-    }
-
-    // 2. FOCUS SWITCH (CTRL + SPACE)
+    // GLOBAL: TOGGLE DESKTOP / APP FOCUS (CTRL+SPACE)
     if (e.code === 'Space' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        // Toggle
         systemFocus = (systemFocus === 'app') ? 'desktop' : 'app';
-        updateFocusVisuals();
+        updateVisuals();
         return;
     }
 
-    // 3. WINDOW COMMANDS (CMD + ...)
-    if (e.metaKey || e.ctrlKey) {
-        if (systemFocus !== 'app' || !isWindowOpen) return;
-
+    // GLOBAL: CYCLE WINDOWS (TAB) - Nur wenn im App Modus
+    if (e.code === 'Tab' && systemFocus === 'app') {
         e.preventDefault();
-        const moveStep = 2;
-        if (e.key === 'ArrowRight') winX = Math.min(95, winX + moveStep);
-        if (e.key === 'ArrowLeft') winX = Math.max(5, winX - moveStep);
-        if (e.key === 'ArrowUp') winY = Math.max(5, winY - moveStep);
-        if (e.key === 'ArrowDown') winY = Math.min(95, winY + moveStep);
-        if (e.key === '+' || e.key === '=') winScale = Math.min(1.5, winScale + 0.1);
-        if (e.key === '-') winScale = Math.max(0.5, winScale - 0.1);
+        // Finde nächste offene App
+        const keys = Object.keys(apps);
+        let currentIndex = keys.indexOf(activeApp);
+        let nextIndex = (currentIndex + 1) % keys.length;
 
-        // Fenster schließen
-        if (e.key === 'Backspace') {
-            isWindowOpen = false;
-            systemFocus = 'desktop'; // Fokus muss auf Desktop gehen
-            updateFocusVisuals();
+        // Loop bis wir eine offene App finden
+        while (!apps[keys[nextIndex]].open) {
+            nextIndex = (nextIndex + 1) % keys.length;
+            if (nextIndex === currentIndex) break; // Alle zu?
         }
 
-        updateWindowPosition();
+        if (apps[keys[nextIndex]].open) {
+            activeApp = keys[nextIndex];
+            updateVisuals();
+        }
         return;
     }
 
-    // 4. DESKTOP NAVIGATION (Wenn Fokus auf Desktop)
+    // MODE: DESKTOP
     if (systemFocus === 'desktop') {
-        if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-            selectedIconIndex = (selectedIconIndex + 1) % icons.length;
-            updateFocusVisuals();
-        }
-        if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-            selectedIconIndex = (selectedIconIndex - 1 + icons.length) % icons.length;
-            updateFocusVisuals();
-        }
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') selectedIconIndex = (selectedIconIndex + 1) % iconKeys.length;
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') selectedIconIndex = (selectedIconIndex - 1 + iconKeys.length) % iconKeys.length;
+
         if (e.key === 'Enter') {
-            // Aktion ausführen
-            const action = document.getElementById(icons[selectedIconIndex]).dataset.action;
-            if (action === 'open-blog') {
-                isWindowOpen = true;
-                systemFocus = 'app';
-                updateFocusVisuals();
-                updateWindowPosition();
-            }
+            const appKey = iconKeys[selectedIconIndex];
+            apps[appKey].open = true;
+            activeApp = appKey;
+            systemFocus = 'app'; // Auto-Switch ins Fenster
         }
+        updateVisuals();
         return;
     }
 
-    // 5. APP NAVIGATION (Normaler Blog)
-    if (systemFocus === 'app' && isWindowOpen) {
-        if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
+    // MODE: WINDOW MANAGEMENT (CMD + ...)
+    if (systemFocus === 'app' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        const app = apps[activeApp];
+        if (!app || !app.open) return;
 
-        if (viewState === 'list') {
-            if (e.key === 'ArrowDown') { selectedIndex = (selectedIndex + 1) % posts.length; renderList(); }
-            else if (e.key === 'ArrowUp') { selectedIndex = (selectedIndex - 1 + posts.length) % posts.length; renderList(); }
-            else if (e.key === 'Enter') { openPost(selectedIndex); }
-        } else if (viewState === 'post') {
-            if (e.key === 'Escape' || e.key === 'Backspace') { renderList(); }
-            else if (e.key === 'ArrowRight') { openPost((currentPostId + 1) % posts.length); }
-            else if (e.key === 'ArrowLeft') { openPost((currentPostId - 1 + posts.length) % posts.length); }
+        if (e.key === 'ArrowRight') app.x = Math.min(95, app.x + 2);
+        if (e.key === 'ArrowLeft') app.x = Math.max(5, app.x - 2);
+        if (e.key === 'ArrowUp') app.y = Math.max(5, app.y - 2);
+        if (e.key === 'ArrowDown') app.y = Math.min(95, app.y + 2);
+        if (e.key === '+' || e.key === '=') app.scale = Math.min(1.5, app.scale + 0.1);
+        if (e.key === '-') app.scale = Math.max(0.5, app.scale - 0.1);
+
+        if (e.key === 'Backspace') {
+            app.open = false;
+            // Versuch Fokus auf anderes Fenster zu legen
+            const openApps = Object.keys(apps).filter(k => apps[k].open);
+            if (openApps.length > 0) activeApp = openApps[0];
+            else systemFocus = 'desktop';
         }
+        updateVisuals();
+        return;
+    }
+
+    // MODE: APP CONTENT NAVIGATION
+    if (systemFocus === 'app') {
+        // Nur wenn Blog aktiv ist, reagieren wir auf Blog-Navigation
+        if (activeApp === 'blog') {
+            handleBlogNav(e);
+        }
+        // Help Window hat keine interaktive Navigation nötig, man kann nur scrollen (theoretisch)
     }
 });
 
-// Touch Swipe (Bleibt gleich)
+function handleBlogNav(e) {
+    if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
+
+    if (viewState === 'list') {
+        if (e.key === 'ArrowDown') { selectedPostIndex = (selectedPostIndex + 1) % posts.length; renderBlogList(); }
+        else if (e.key === 'ArrowUp') { selectedPostIndex = (selectedPostIndex - 1 + posts.length) % posts.length; renderBlogList(); }
+        else if (e.key === 'Enter') { openBlogPost(selectedPostIndex); }
+    } else if (viewState === 'post') {
+        if (e.key === 'Escape' || e.key === 'Backspace') { renderBlogList(); }
+        else if (e.key === 'ArrowRight') { openBlogPost((currentPostId + 1) % posts.length); }
+        else if (e.key === 'ArrowLeft') { openBlogPost((currentPostId - 1 + posts.length) % posts.length); }
+    }
+}
+
+function handleMobileInput(e) {
+    // Simplifizierte Mobile Steuerung
+    if (viewState === 'list') {
+        if (e.key === 'ArrowDown') { selectedPostIndex = (selectedPostIndex + 1) % posts.length; renderBlogList(); }
+        if (e.key === 'ArrowUp') { selectedPostIndex = (selectedPostIndex - 1 + posts.length) % posts.length; renderBlogList(); }
+        if (e.key === 'Enter') openBlogPost(selectedPostIndex);
+    } else {
+        if (e.key === 'Escape') renderBlogList();
+    }
+}
+
+// Mobile Touch (nur für Blog relevant)
 let touchStartX = 0;
 document.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX);
 document.addEventListener('touchend', e => {
-    if (viewState === 'post') {
-        let touchEndX = e.changedTouches[0].screenX;
-        if (touchEndX < touchStartX - 50) openPost((currentPostId + 1) % posts.length);
-        if (touchEndX > touchStartX + 50) openPost((currentPostId - 1 + posts.length) % posts.length);
+    if (activeApp === 'blog' && viewState === 'post') {
+        let endX = e.changedTouches[0].screenX;
+        if (endX < touchStartX - 50) openBlogPost((currentPostId + 1) % posts.length);
+        if (endX > touchStartX + 50) openBlogPost((currentPostId - 1 + posts.length) % posts.length);
     }
 });
-document.querySelector('header').addEventListener('click', () => { if(viewState === 'post') renderList(); });
+document.querySelector('#win-blog header').addEventListener('click', () => { if(viewState === 'post') renderBlogList(); });
 
-// Start
-loadPosts();
-checkMobile();
-updateFocusVisuals();
-updateWindowPosition();
+init();

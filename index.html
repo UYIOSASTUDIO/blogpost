@@ -11,50 +11,78 @@
 <body>
 
 <div id="desktop-area">
-    <div id="icon-blog" class="desktop-icon selected" data-action="open-blog">
-        <div class="icon-graphic"></div>
+    <div id="icon-blog" class="desktop-icon selected" data-app="blog">
+        <div class="icon-graphic" style="display:flex;justify-content:center;align-items:center;">:::</div>
         <span class="icon-label">BLOG.EXE</span>
     </div>
 
-    <div id="icon-trash" class="desktop-icon" data-action="trash">
-        <div class="icon-graphic" style="border-style:dashed;"></div>
-        <span class="icon-label">TRASH</span>
+    <div id="icon-help" class="desktop-icon" data-app="help">
+        <div class="icon-graphic" style="display:flex;justify-content:center;align-items:center;">?</div>
+        <span class="icon-label">HELP.TXT</span>
     </div>
 </div>
 
-<div id="window-wrapper">
+<div id="win-blog" class="window-wrapper active">
     <div class="title-bar">
-        <div class="window-controls">
-            <div class="win-btn"></div>
-        </div>
+        <div class="window-controls"><div class="win-btn"></div></div>
         <div class="title-text">/// SYSTEM 3615 ///</div>
-        <div class="window-controls">
-            <div class="win-btn"></div>
-            <div class="win-btn"></div>
-        </div>
+        <div class="window-controls"><div class="win-btn"></div></div>
     </div>
+    <div id="blog-screen">
+        <div id="scanlines"></div> <header>
+        <div class="logo-section">
+            <div class="top-line">→ 3615 BLOG</div>
+            <div style="line-height:0.6; opacity:0.8;">/////<br>/////<br>/////</div>
+        </div>
+        <div class="header-block">11 T</div>
+    </header>
+        <div id="list-view"></div>
+        <div id="post-view" class="single-post"></div>
+    </div>
+</div>
 
-    <div id="minitel-screen">
-        <div id="scanlines"></div>
-
-        <header>
-            <div class="logo-section">
-                <div class="top-line">→ 3615 BLOG SYSTEM</div>
-                <div style="line-height:0.6; opacity:0.8;">
-                    /////<br>/////<br>/////
-                </div>
-            </div>
-            <div class="header-block">11 T</div>
-        </header>
-
-        <div id="content-area">
-            <div id="list-view"></div>
-            <div id="post-view" class="single-post"></div>
+<div id="win-help" class="window-wrapper inactive">
+    <div class="title-bar">
+        <div class="window-controls"><div class="win-btn"></div></div>
+        <div class="title-text">README.TXT</div>
+        <div class="window-controls"><div class="win-btn"></div></div>
+    </div>
+    <div id="help-screen">
+        <div style="text-align:center; margin-bottom:20px; border:1px solid #fff; padding:5px;">
+            SYSTEM MANUAL<br>VERSION 1.0
         </div>
 
-        <footer style="margin-top:auto; text-align:right; font-size:1rem; opacity:0.6;">
-            <span id="desktop-hint">SWITCH: CTRL+SPACE | MOVE: CMD+ARROWS</span>
-        </footer>
+        <div class="help-entry">
+            <span class="key-combo">ARROWS + ENTER</span>
+            Navigieren & Lesen
+        </div>
+
+        <div class="help-entry">
+            <span class="key-combo">CTRL + SPACE</span>
+            Fokus Wechseln<br>(Desktop <-> Fenster)
+        </div>
+
+        <div class="help-entry">
+            <span class="key-combo">TAB</span>
+            Fenster Wechseln<br>(Wenn mehrere offen)
+        </div>
+
+        <div class="help-entry">
+            <span class="key-combo">CMD + ARROWS</span>
+            Fenster verschieben
+        </div>
+        <div class="help-entry">
+            <span class="key-combo">CMD + +/-</span>
+            Größe ändern
+        </div>
+        <div class="help-entry">
+            <span class="key-combo">CMD + BACKSPACE</span>
+            Fenster schließen
+        </div>
+        <br>
+        <div style="text-align:center; opacity:0.5;">
+            END OF FILE.
+        </div>
     </div>
 </div>
 
