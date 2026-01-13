@@ -10,6 +10,24 @@
 </head>
 <body>
 
+<div id="global-overlay"></div>
+
+<div id="loading-screen">
+    <div id="boot-scanlines"></div>
+
+    <div id="loading-window">
+        <div id="boot-header">SYSTEM 3615 BIOS V1.0</div>
+        <div id="boot-log">
+        </div>
+        <div id="loading-status">
+            <div id="progress-bar-container">
+                <div id="progress-bar-fill"></div>
+            </div>
+            <span id="progress-percent">0%</span>
+        </div>
+    </div>
+</div>
+
 <div id="desktop-area">
 
     <div id="ascii-bg">
@@ -88,7 +106,7 @@
         <div class="title-text">/// SYSTEM TM ///</div>
     </div>
     <div id="blog-screen">
-        <div id="scanlines"></div> <header>
+    <header>
         <div class="logo-section">
             <div class="top-line">→ 3615 BLOG</div>
             <div style="line-height:0.6; opacity:0.8;">/////<br>/////<br>/////</div>
@@ -141,6 +159,14 @@
             END OF FILE.
         </div>
     </div>
+</div>
+
+<input type="text" id="virtual-keyboard-input" autocomplete="off" style="opacity:0; position:absolute; top:-1000px;">
+
+<div id="mobile-taskbar">
+    <div class="mobile-tab active" id="tab-blog" onclick="switchMobileApp('blog')">[ BLOG ]</div>
+    <div class="mobile-tab" id="tab-social" onclick="switchMobileApp('social')">[ SOCIAL ]</div>
+    <div class="mobile-tab" id="tab-help" onclick="switchMobileApp('help')">[ ? ]</div>
 </div>
 
 <script src="script.js"></script>

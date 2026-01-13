@@ -49,9 +49,67 @@ function init() {
     loadPosts();
     updateVisuals();
     renderSocial();
+    runBootSequence();
 }
 
 function checkMobile() { isMobile = window.innerWidth <= 800; }
+
+function runBootSequence() {
+    const log = document.getElementById('boot-log');
+    const bar = document.getElementById('progress-bar-fill');
+    const txt = document.getElementById('progress-percent');
+    const screen = document.getElementById('loading-screen');
+
+    // Retro Log Nachrichten
+    const messages = [
+        "INITIALIZING KERNEL...",
+        "CHECKING MEMORY: 640K OK",
+        "LOADING DRIVERS...",
+        "MOUNTING VIRTUAL DRIVE A:...",
+        "READING POSTS.JSON...",
+        "CONNECTING TO SOCIAL.EXE...",
+        "DECRYPTING BLOG DATA...",
+        "ESTABLISHING SECURE CONNECTION...",
+        "SYSTEM 3615 READY."
+    ];
+
+    let progress = 0;
+    let msgIndex = 0;
+
+    // Funktion für jeden Schritt
+    const interval = setInterval(() => {
+        // Fortschritt erhöhen
+        progress += Math.floor(Math.random() * 5) + 2; // Zufällig 2-7% dazu
+        if (progress > 100) progress = 100;
+
+        // UI Updates
+        bar.style.width = `${progress}%`;
+        txt.innerText = `${progress}%`;
+
+        // Text hinzufügen (nicht bei jedem Tick, sondern alle ~10%)
+        if (progress > (msgIndex * 12) && msgIndex < messages.length) {
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.innerText = `> ${messages[msgIndex]}`;
+            log.appendChild(line);
+            msgIndex++;
+        }
+
+        // FERTIG?
+        if (progress >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+                // Ladescreen ausblenden
+                screen.style.opacity = '0';
+                setTimeout(() => {
+                    screen.style.display = 'none';
+                    // Visuelles Update der Apps erzwingen
+                    updateVisuals();
+                }, 500);
+            }, 500); // Kurze Pause bei 100%
+        }
+    }, 50); // Geschwindigkeit der Animation
+}
 
 async function loadPosts() {
     try {
@@ -87,13 +145,14 @@ function renderBlogList() {
     postView.style.display = 'none';
     listView.style.display = 'flex'; listView.style.flexDirection = 'column';
 
-    // Header mit Suche
+    // UPDATE: onclick hinzugefügt für Mobile Keyboard
     listView.innerHTML = `
-        <div class="search-bar">SUCHE: ${searchQuery}<span class="search-cursor">_</span></div>
+        <div class="search-bar" onclick="activateMobileSearch()">
+            SUCHE: ${searchQuery}<span class="search-cursor">_</span>
+        </div>
         <div style="margin-bottom:10px;">INDEX:<br>------</div>
     `;
 
-    // Filtern
     const filtered = posts.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
     if (filtered.length === 0) {
@@ -101,7 +160,6 @@ function renderBlogList() {
         return;
     }
 
-    // Index Korrektur für gefilterte Liste
     if (selectedPostIndex >= filtered.length) selectedPostIndex = filtered.length - 1;
     if (selectedPostIndex < 0) selectedPostIndex = 0;
 
@@ -109,7 +167,6 @@ function renderBlogList() {
         const div = document.createElement('div');
         div.className = `post-item ${index === selectedPostIndex ? 'active' : ''}`;
         div.innerHTML = `<span>${post.title}</span><span class="dots-filler"></span><span>${post.date}</span>`;
-        // Mapping zum Original Index
         const originalIndex = posts.indexOf(post);
         div.onclick = () => { selectedPostIndex = index; openBlogPost(originalIndex); };
         listView.appendChild(div);
@@ -421,15 +478,17 @@ function handleMobileInput(e) {
 
 function renderSocial() {
     const screen = document.getElementById('social-screen');
+
+    // UPDATE: onclick hinzugefügt
     screen.innerHTML = `
-        <div class="search-bar">FILTER: ${searchQuery}<span class="search-cursor">_</span></div>
+        <div class="search-bar" onclick="activateMobileSearch()">
+            FILTER: ${searchQuery}<span class="search-cursor">_</span>
+        </div>
     `;
 
     const filtered = socialPosts.filter(p => p.user.includes(searchQuery) || p.caption.includes(searchQuery));
 
-    if (filtered.length === 0) {
-        screen.innerHTML += "<div>LEER.</div>"; return;
-    }
+    if (filtered.length === 0) { screen.innerHTML += "<div>LEER.</div>"; return; }
     if (selectedSocialIndex >= filtered.length) selectedSocialIndex = filtered.length - 1;
 
     filtered.forEach((post, index) => {
@@ -439,8 +498,6 @@ function renderSocial() {
 
         const likeText = post.likedByMe ? "♥" : "LIKE";
         const descText = isExpanded ? "CLOSE" : "DESC";
-
-        // Button Styles
         const likeClass = (isFocus && socialFocusTarget === 'like') ? 'selected-btn' : '';
         const descClass = (isFocus && socialFocusTarget === 'caption') ? 'selected-btn' : '';
 
@@ -456,6 +513,12 @@ function renderSocial() {
             </div>
             <div class="social-caption ${isExpanded ? 'expanded' : ''}">${post.caption}</div>
         `;
+        // Click Handler für Mobile Interaktion (Optional, damit Touch auch den Fokus setzt)
+        div.onclick = () => {
+            selectedSocialIndex = index;
+            socialMode = 'focus';
+            renderSocial();
+        };
         screen.appendChild(div);
     });
 
@@ -483,5 +546,44 @@ document.addEventListener('touchend', e => {
     }
 });
 document.querySelector('#win-blog header').addEventListener('click', () => { if(viewState === 'post') renderBlogList(); });
+
+// --- MOBILE HELPER ---
+
+// 1. App Umschalten per Taskbar
+function switchMobileApp(appName) {
+    // Setze interne States
+    activeApp = appName;
+    systemFocus = 'app';
+
+    // UI Update (Taskbar)
+    document.querySelectorAll('.mobile-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tab-${appName}`).classList.add('active');
+
+    // Windows öffnen/schließen
+    for (const key in apps) apps[key].open = (key === appName);
+
+    updateVisuals();
+
+    // Inhalt neu rendern (wichtig für Search Sync)
+    if(appName === 'blog') renderBlogList();
+    if(appName === 'social') renderSocial();
+}
+
+// 2. Suche aktivieren (Tastatur hochfahren)
+function activateMobileSearch() {
+    if(!isMobile) return;
+    const input = document.getElementById('virtual-keyboard-input');
+    input.focus();
+    input.click(); // Sicherstellen
+}
+
+// 3. Ghost Input Listener (Verbindet Input -> JS Variable)
+document.getElementById('virtual-keyboard-input').addEventListener('input', (e) => {
+    searchQuery = e.target.value.toUpperCase(); // Alles Uppercase für Retro-Look
+
+    // Sofort rendern je nach App
+    if(activeApp === 'blog') renderBlogList();
+    if(activeApp === 'social') renderSocial();
+});
 
 init();

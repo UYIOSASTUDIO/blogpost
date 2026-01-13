@@ -21,6 +21,111 @@ body {
     cursor: none; user-select: none;
 }
 
+/* --- GLOBAL OVERLAY (Pixel-Mesh & Vignette) --- */
+#global-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; /* Klicks gehen hindurch */
+    z-index: 9000;
+
+    background-image:
+            linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+            linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 3px, 3px 100%;
+
+    box-shadow: inset 0 0 150px rgba(0,0,0,0.8);
+    opacity: 0.75;
+}
+
+/* --- LOADING SCREEN (Updated) --- */
+#loading-screen {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+
+    /* Hintergrundfarbe + Das Punkt-Grid (Retro Grid) */
+    background-color: #000;
+    background-image: radial-gradient(var(--desktop-pattern) 15%, transparent 16%),
+    radial-gradient(var(--desktop-pattern) 15%, transparent 16%);
+    background-size: 4px 4px;
+
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease-out;
+}
+
+/* Neuer Scanline Layer speziell für den Boot Screen */
+#boot-scanlines {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    /* Der gleiche CRT Effekt wie im Blog */
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 3px, 3px 100%;
+    pointer-events: none;
+    z-index: 10001; /* WICHTIG: Muss ÜBER dem loading-window liegen */
+}
+
+/* Das eigentliche Lade-Fenster */
+#loading-window {
+    width: 600px;
+    height: 400px;
+    background-color: #547698;
+    border: 2px solid var(--text-white);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 10px 10px 0 #000;
+    color: var(--text-white);
+    font-family: 'VT323', monospace;
+    position: relative;
+    z-index: 10000; /* Unter den Scanlines */
+}
+
+#boot-header {
+    border-bottom: 2px solid var(--text-white);
+    padding-bottom: 10px; margin-bottom: 10px;
+    font-weight: bold; text-align: center; letter-spacing: 2px;
+}
+
+#boot-log {
+    flex-grow: 1; overflow: hidden;
+    font-size: 1.2rem; line-height: 1.4;
+    display: flex; flex-direction: column; justify-content: flex-end;
+}
+
+.log-line { margin: 0; }
+
+#loading-status {
+    margin-top: 20px; display: flex; align-items: center; gap: 10px;
+}
+
+#progress-bar-container {
+    flex-grow: 1; height: 20px; border: 2px solid var(--text-white); padding: 2px;
+}
+
+#progress-bar-fill {
+    height: 100%; width: 0%; background-color: var(--text-white); transition: width 0.1s linear;
+}
+
+/* MOBILE ANPASSUNG */
+@media (max-width: 800px) {
+    #loading-screen {
+        background-color: #547698; /* Blau auf Handy */
+        /* Auch hier das Grid leicht durchscheinen lassen (optional) */
+        background-image: radial-gradient(rgba(0,0,0,0.2) 15%, transparent 16%),
+        radial-gradient(rgba(0,0,0,0.2) 15%, transparent 16%);
+    }
+
+    #loading-window {
+        width: 100%; height: 100%;
+        border: none; box-shadow: none; padding: 20px;
+        background: transparent; /* Damit man das Grid vom Screen sieht */
+    }
+
+    #boot-log { font-size: 1rem; }
+}
+
 /* --- ASCII BACKGROUND ART --- */
 #ascii-bg {
     position: absolute;
@@ -139,7 +244,6 @@ header { display: flex; justify-content: space-between; margin-bottom: 20px; fle
 
 /* --- MOBILE OPTIMIERUNG --- */
 @media (max-width: 800px) {
-    #desktop-area, .title-bar, #win-help { display: none !important; }
 
     #win-blog {
         /* Reset alle Desktop Styles */
@@ -181,14 +285,6 @@ header { display: flex; justify-content: space-between; margin-bottom: 20px; fle
     #post-view::-webkit-scrollbar { width: 6px; }
     #post-view::-webkit-scrollbar-track { background: var(--bg-color); }
     #post-view::-webkit-scrollbar-thumb { background-color: var(--crt-blue); border: 1px solid #fff; }
-
-    /* Damit Header und Content auf kleinen Screens gut aussehen */
-    header { margin-bottom: 15px; }
-    .header-block { padding: 5px 10px; font-size: 1.5rem; }
-    .post-item { padding: 10px 5px; font-size: 1.1rem; }
-    .post-body { font-size: 1.1rem; line-height: 1.5; }
-
-    body { cursor: auto; }
 }
 
 /* --- SOCIAL WINDOW STYLES --- */
@@ -318,4 +414,63 @@ header { display: flex; justify-content: space-between; margin-bottom: 20px; fle
     display: flex;
     gap: 10px;
     font-size: 0.9rem;
+}
+
+/* --- MOBILE OPTIMIERUNG & TASKBAR --- */
+#mobile-taskbar { display: none; } /* Desktop: Aus */
+
+@media (max-width: 800px) {
+    /* GUI Anpassungen */
+    #desktop-area, .title-bar, .window-controls { display: none !important; }
+
+    /* TASKBAR ANZEIGEN */
+    #mobile-taskbar {
+        display: flex;
+        position: fixed; bottom: 0; left: 0; width: 100%; height: 50px;
+        background: #000; border-top: 2px solid var(--text-white);
+        z-index: 9999;
+        justify-content: space-around; align-items: center;
+        font-size: 1.2rem;
+    }
+
+    .mobile-tab {
+        color: #888; cursor: pointer; padding: 10px;
+    }
+    .mobile-tab.active {
+        color: var(--text-white); font-weight: bold; text-shadow: 0 0 5px var(--crt-blue);
+    }
+
+    /* FENSTER MANAGEMENT MOBILE (Generalisiert!) */
+    /* Alle aktiven Fenster werden Fullscreen angezeigt */
+    .window-wrapper.active {
+        display: flex !important;
+        position: fixed !important; top: 0 !important; left: 0 !important;
+        width: 100% !important; height: calc(100dvh - 50px) !important; /* Platz für Taskbar lassen */
+        transform: none !important;
+        box-shadow: none !important; border: none !important;
+        z-index: 100 !important;
+    }
+
+    /* Inaktive Fenster komplett ausblenden */
+    .window-wrapper.inactive {
+        display: none !important;
+    }
+
+    /* SCROLLING FIXES */
+    #blog-screen, #social-screen, #help-screen {
+        padding: 15px; padding-bottom: 60px; /* Buffer für Taskbar */
+        overflow-y: auto; min-height: 0; flex-grow: 1;
+    }
+    #list-view, #post-view { overflow-y: auto; flex-grow: 1; min-height: 0; }
+
+    /* Custom Scrollbar auch mobil anzeigen (optional, falls gewünscht) */
+    ::-webkit-scrollbar { width: 4px; display: block; }
+
+    /* HEADER & TEXT */
+    header { margin-bottom: 15px; }
+    .header-block { padding: 5px 10px; font-size: 1.5rem; }
+    .post-item { padding: 10px 5px; font-size: 1.1rem; }
+    .post-body { font-size: 1.1rem; line-height: 1.5; }
+
+    body { cursor: auto; }
 }
