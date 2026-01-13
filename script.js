@@ -227,34 +227,59 @@ document.addEventListener('keydown', (e) => {
     }
 
     // 4. WINDOW COMMANDS (CMD + ...) - Bleibt gleich
+    // MODE: WINDOW MANAGEMENT (CMD + ...)
     if (systemFocus === 'app' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         const app = apps[activeApp];
         if (!app || !app.open) return;
-        // Resize Modus (ALT)
+
+        // 1. RESIZE MODUS (CMD + ALT + ARROWS) -> Nur Breite/Höhe
         if (e.altKey) {
             const step = 20;
             if (e.key === 'ArrowRight') app.w += step;
             if (e.key === 'ArrowLeft')  app.w = Math.max(300, app.w - step);
             if (e.key === 'ArrowDown')  app.h += step;
             if (e.key === 'ArrowUp')    app.h = Math.max(200, app.h - step);
-            updateVisuals(); return;
+            updateVisuals();
+            return;
         }
-        // Move Modus
-        if (!e.altKey && !e.shiftKey) {
+
+        // 2. MOVE MODUS (NUR CMD + ARROWS) -> Verschieben
+        // Wir prüfen explizit auf Pfeiltasten, damit +/- nicht hier landen
+        if (!e.altKey && !e.shiftKey && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
             if (e.key === 'ArrowRight') app.x = Math.min(95, app.x + 2);
             if (e.key === 'ArrowLeft')  app.x = Math.max(5, app.x - 2);
             if (e.key === 'ArrowUp')    app.y = Math.max(5, app.y - 2);
             if (e.key === 'ArrowDown')  app.y = Math.min(95, app.y + 2);
+            updateVisuals();
+            return;
         }
-        // Close
+
+        // 3. PROPORTIONAL RESIZE (CMD + +/-)
+        const resizeStep = 20;
+        // Unterstützt jetzt auch Numpad und verschiedene Layouts
+        if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd') {
+            app.w += resizeStep;
+            app.h += resizeStep;
+            updateVisuals();
+            return;
+        }
+        if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract') {
+            app.w = Math.max(300, app.w - resizeStep);
+            app.h = Math.max(200, app.h - resizeStep);
+            updateVisuals();
+            return;
+        }
+
+        // CLOSE
         if (e.key === 'Backspace') {
             app.open = false;
-            // Fokus auf Desktop wenn alles zu
-            const anyOpen = Object.values(apps).some(a => a.open);
-            if(!anyOpen) systemFocus = 'desktop';
+            const openApps = Object.keys(apps).filter(k => apps[k].open);
+            if (openApps.length > 0) activeApp = openApps[0];
+            else systemFocus = 'desktop';
+            updateVisuals();
+            return;
         }
-        updateVisuals(); return;
     }
 
     // 5. APP CONTENT NAVIGATION
@@ -333,35 +358,54 @@ document.addEventListener('keydown', (e) => {
 });
 
 function handleBlogNav(e) {
-    // Wenn SHIFT gedrückt ist, scrollen wir den Inhalt (nur im Post-View)
-    if (viewState === 'post' && e.shiftKey) {
-        e.preventDefault();
+    // 1. Wenn ein Blog-Post offen ist
+    if (viewState === 'post') {
         const view = document.getElementById('post-view');
         const scrollStep = 30;
 
-        if (e.key === 'ArrowDown') view.scrollTop += scrollStep;
-        if (e.key === 'ArrowUp')   view.scrollTop -= scrollStep;
-        return; // Navigation abbrechen, da wir scrollen
-    }
-
-    if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
-
-    if (viewState === 'list') {
-        if (e.key === 'ArrowDown') { selectedPostIndex = (selectedPostIndex + 1) % posts.length; renderBlogList(); }
-        else if (e.key === 'ArrowUp') { selectedPostIndex = (selectedPostIndex - 1 + posts.length) % posts.length; renderBlogList(); }
-        else if (e.key === 'Enter') { openBlogPost(selectedPostIndex); }
-    } else if (viewState === 'post') {
-        if (e.key === 'Escape' || e.key === 'Backspace') { renderBlogList(); }
-        else if (e.key === 'ArrowRight') {
-            let next = (currentPostId + 1) % posts.length;
-            selectedPostIndex = next;
-            openBlogPost(next);
+        // SCROLLEN (Hoch/Runter)
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            view.scrollTop += scrollStep;
+            return;
         }
-        else if (e.key === 'ArrowLeft') {
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            view.scrollTop -= scrollStep;
+            return;
+        }
+
+        // WECHSELN (Links/Rechts)
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            let next = (currentPostId + 1) % posts.length;
+            selectedPostIndex = next; // Sync Selection
+            openBlogPost(next);
+            return;
+        }
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
             let prev = (currentPostId - 1 + posts.length) % posts.length;
             selectedPostIndex = prev;
             openBlogPost(prev);
+            return;
         }
+
+        // ZURÜCK ZUR LISTE
+        if (e.key === 'Escape' || e.key === 'Backspace') {
+            e.preventDefault();
+            renderBlogList();
+            return;
+        }
+    }
+
+    // 2. Wenn wir in der Liste sind (bleibt wie vorher)
+    if (viewState === 'list') {
+        if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
+
+        if (e.key === 'ArrowDown') { selectedPostIndex = (selectedPostIndex + 1) % posts.length; renderBlogList(); }
+        else if (e.key === 'ArrowUp') { selectedPostIndex = (selectedPostIndex - 1 + posts.length) % posts.length; renderBlogList(); }
+        else if (e.key === 'Enter') { openBlogPost(selectedPostIndex); }
     }
 }
 
