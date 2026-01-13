@@ -42,7 +42,7 @@ body {
     font-size: 5px;       /* Klein genug damit es passt */
     line-height: 5px;     /* Zeilenabstand komprimieren */
     margin: 0;
-    white-space: pre;     /* Behält Leerzeichen bei */
+    white-space: pre;
 }
 
 /* --- DESKTOP --- */

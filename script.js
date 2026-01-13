@@ -240,7 +240,6 @@ function handleBlogNav(e) {
         return; // Navigation abbrechen, da wir scrollen
     }
 
-    // Normale Navigation (ohne Shift)
     if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) e.preventDefault();
 
     if (viewState === 'list') {
