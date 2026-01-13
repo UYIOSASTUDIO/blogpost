@@ -26,21 +26,29 @@ body {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* Exakt zentriert */
+    transform: translate(-50%, -50%); /* Zentriert den Container */
     width: 100%;
-    text-align: center;
-    pointer-events: none; /* Klicks gehen durch! WICHTIG */
-    user-select: none;    /* Nicht markierbar! WICHTIG */
-    z-index: 0;           /* Ganz unten */
-    opacity: 0.1;         /* Sehr schwach sichtbar (Wasserzeichen) */
-    color: var(--text-white);
+    height: 100%;
+
+    /* NEU: Flexbox zum Zentrieren des Inhalts */
+    display: flex;
+    justify-content: center; /* Zentriert den PRE-Block horizontal */
+    align-items: center;     /* Zentriert den PRE-Block vertikal */
+
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+    opacity: 0.3; /* Oder weniger, je nach Geschmack */
     overflow: hidden;
 }
 
 #ascii-bg pre {
-    font-family: 'Courier New', Courier, monospace; /* Echte Monospace Font nötig für ASCII */
-    font-size: 5px;       /* Klein genug damit es passt */
-    line-height: 5px;     /* Zeilenabstand komprimieren */
+    /* WICHTIG: Intern muss es linksbündig bleiben! */
+    text-align: left;
+
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 6px;       /* Kannst du anpassen, wenn es zu klein/groß ist */
+    line-height: 6px;
     margin: 0;
     white-space: pre;
 }
