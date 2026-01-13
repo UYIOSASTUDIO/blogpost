@@ -2,20 +2,23 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3615 BLOG</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#020205">
+    <title>SYSTEM 3615</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="minitel-screen">
+<div id="desktop-bg"></div>
+
+<div id="minitel-screen" class="window-frame">
     <div id="scanlines"></div>
 
-    <header>
+    <header id="window-header">
         <div class="logo-section">
             <div class="top-line">→ 3615 BLOG SYSTEM</div>
-            <div style="line-height:0.6; font-size:1rem; opacity:0.8;">
+            <div class="ascii-logo">
                 /////<br>
                 /////<br>
                 /////
@@ -28,13 +31,11 @@
     </header>
 
     <div id="content-area">
-        <div id="list-view">
-        </div>
-        <div id="post-view" class="single-post">
-        </div>
+        <div id="list-view"></div>
+        <div id="post-view" class="single-post"></div>
     </div>
 
-    <footer>
+    <footer id="desktop-footer">
         <div class="menu-box">
             <div class="menu-item" id="hint-select">WÄHLEN</div>
             <div class="menu-key">ENTER</div>
