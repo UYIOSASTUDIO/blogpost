@@ -1,0 +1,44 @@
+[
+  {
+    "filename": "Parktikumsliste.xlsx",
+    "filepath": "Parktikumsliste.xlsx",
+    "type": "DAT",
+    "size": "11 KB"
+  },
+  {
+    "filename": "gosp_client",
+    "type": "DIR",
+    "content": [
+      {
+        "filename": "Cargo.toml",
+        "filepath": "gosp_client/Cargo.toml",
+        "type": "DAT",
+        "size": "671 B"
+      },
+      {
+        "filename": "src",
+        "type": "DIR",
+        "content": [
+          {
+            "filename": "identity.rs",
+            "filepath": "gosp_client/src/identity.rs",
+            "type": "DAT",
+            "size": "4 KB"
+          },
+          {
+            "filename": "main.rs",
+            "filepath": "gosp_client/src/main.rs",
+            "type": "DAT",
+            "size": "43 KB"
+          },
+          {
+            "filename": "upload_ui.rs",
+            "filepath": "gosp_client/src/upload_ui.rs",
+            "type": "DAT",
+            "size": "21 KB"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,10 +1,21 @@
 :root {
-    --bg-color: #020205;
-    --crt-blue: #547698;
-    --text-white: #EBEFEF;
-    --window-border: #EBEFEF;
-    --window-inactive: #444;
-    --desktop-pattern: #1a1a24;
+    /* VINTAGE WHITE: Ein kühles "Digital-Papier" (kein Gelbstich, eher Grau/Blau-Nuance) */
+    --bg-color: #F1F2F6;
+
+    /* HYPER BLUE: Das satte, digitale Blau aus dem Referenzbild */
+    --crt-blue: #0022FF;
+
+    /* TEXT COLOR: Der Text ist jetzt BLAU (statt Weiß), damit man ihn auf dem hellen Grund sieht */
+    --text-white: #0022FF;
+
+    /* BORDER: Auch Blau für die Rahmen */
+    --window-border: #0022FF;
+
+    /* INACTIVE: Ein blasses Blau-Grau für inaktive Fenster */
+    --window-inactive: #B0B0CC;
+
+    /* PATTERN: Das Raster im Hintergrund (ganz feines Blau) */
+    --desktop-pattern: #DDE0F0;
 }
 
 * { box-sizing: border-box; }
@@ -21,31 +32,51 @@ body {
     cursor: none; user-select: none;
 }
 
+.header-block,
+.post-item.active,
+.desktop-icon.selected .icon-label,
+#boot-header,
+.social-header,
+.action-btn.selected-btn,
+.mobile-tab.active {
+    color: #ffffff !important;
+}
+
 /* --- GLOBAL OVERLAY (Pixel-Mesh & Vignette) --- */
 #global-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none; /* Klicks gehen hindurch */
+    pointer-events: none;
     z-index: 9000;
 
+    /* Leichte Körnung + minimale blaue Scanlines */
     background-image:
-            linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
-            linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-    background-size: 100% 3px, 3px 100%;
+            linear-gradient(rgba(0, 30, 255, 0.05) 50%, rgba(255, 255, 255, 0) 50%),
+            radial-gradient(circle, rgba(0,0,255,0.02) 1px, transparent 1px);
 
-    box-shadow: inset 0 0 150px rgba(0,0,0,0.8);
+    background-size: 100% 4px, 3px 3px;
+
+    /* Vignette jetzt in Weiß/Grau statt Schwarz für den "Light Screen" Effekt */
+    box-shadow: inset 0 0 100px rgba(0, 34, 255, 0.1);
+
+    /* Mix-Mode hilft, es mit dem Weiß zu verschmelzen */
+    mix-blend-mode: multiply;
     opacity: 0.75;
 }
 
-/* --- LOADING SCREEN (Updated) --- */
+/* --- LOADING SCREEN (Updated Desktop) --- */
 #loading-screen {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
 
-    /* Hintergrundfarbe + Das Punkt-Grid (Retro Grid) */
+    /* Hintergrund Schwarz (Retro Boot) */
     background-color: #000;
-    background-image: radial-gradient(var(--desktop-pattern) 15%, transparent 16%),
-    radial-gradient(var(--desktop-pattern) 15%, transparent 16%);
+
+    /* FIX: Statt der hellen Variable nutzen wir hier 15% Transparenz */
+    background-image:
+            radial-gradient(rgba(221, 224, 240, 0.15) 15%, transparent 16%),
+            radial-gradient(rgba(221, 224, 240, 0.15) 15%, transparent 16%);
+
     background-size: 4px 4px;
 
     z-index: 9999;
@@ -70,13 +101,13 @@ body {
 #loading-window {
     width: 600px;
     height: 400px;
-    background-color: #547698;
-    border: 2px solid var(--text-white);
+    background-color: var(--bg-color); /* Fenster ist jetzt hell */
+    color: var(--crt-blue); /* Text blau */
+    border: 2px solid var(--crt-blue);
     padding: 20px;
     display: flex;
     flex-direction: column;
     box-shadow: 10px 10px 0 #000;
-    color: var(--text-white);
     font-family: 'VT323', monospace;
     position: relative;
     z-index: 10000; /* Unter den Scanlines */
@@ -84,8 +115,10 @@ body {
 
 #boot-header {
     border-bottom: 2px solid var(--text-white);
-    padding-bottom: 10px; margin-bottom: 10px;
+    padding: 5px; margin-bottom: 10px;
     font-weight: bold; text-align: center; letter-spacing: 2px;
+    background-color: var(--crt-blue); /* Header gefüllt */
+    color: #fff !important;
 }
 
 #boot-log {
@@ -101,29 +134,11 @@ body {
 }
 
 #progress-bar-container {
-    flex-grow: 1; height: 20px; border: 2px solid var(--text-white); padding: 2px;
+    flex-grow: 1; height: 20px; border: 2px solid var(--crt-blue); padding: 2px;
 }
 
 #progress-bar-fill {
-    height: 100%; width: 0%; background-color: var(--text-white); transition: width 0.1s linear;
-}
-
-/* MOBILE ANPASSUNG */
-@media (max-width: 800px) {
-    #loading-screen {
-        background-color: #547698; /* Blau auf Handy */
-        /* Auch hier das Grid leicht durchscheinen lassen (optional) */
-        background-image: radial-gradient(rgba(0,0,0,0.2) 15%, transparent 16%),
-        radial-gradient(rgba(0,0,0,0.2) 15%, transparent 16%);
-    }
-
-    #loading-window {
-        width: 100%; height: 100%;
-        border: none; box-shadow: none; padding: 20px;
-        background: transparent; /* Damit man das Grid vom Screen sieht */
-    }
-
-    #boot-log { font-size: 1rem; }
+    height: 100%; width: 0%; background-color: var(--crt-blue); transition: width 0.1s linear;
 }
 
 /* --- ASCII BACKGROUND ART --- */
@@ -143,8 +158,9 @@ body {
     pointer-events: none;
     user-select: none;
     z-index: 0;
-    opacity: 0.3; /* Oder weniger, je nach Geschmack */
+    opacity: 0.5; /* Oder weniger, je nach Geschmack */
     overflow: hidden;
+    color: var(--crt-blue);
 }
 
 #ascii-bg pre {
@@ -172,25 +188,45 @@ body {
 .desktop-icon {
     display: flex; flex-direction: column; align-items: center;
     width: 80px; text-align: center; color: var(--text-white);
-    opacity: 0.7; transition: opacity 0.2s;
-    z-index: 10;          /* Höher als ASCII Art */
+    z-index: 10;
     position: relative;
+
+    /* MODUS 1: DESKTOP FOKUS (Standard) */
+    /* Wenn man auf dem Desktop ist, sind alle Icons gut sichtbar */
+    opacity: 0.85;
+    transition: all 0.4s ease; /* Weicher Übergang beim Wechsel */
 }
-.desktop-icon.selected { opacity: 1; }
+
+/* MODUS 2: APP FOKUS (Fenster aktiv) */
+/* TRICK: Wenn der Body ein .window-wrapper.active enthält... */
+body:has(.window-wrapper.active) .desktop-icon {
+    opacity: 0.4;
+    filter: grayscale(100%); /* Optional: Farbe rausnehmen */
+}
+
+/* AUSNAHME: DAS AUSGEWÄHLTE ICON */
+/* Egal welcher Modus: Das selektierte Icon ist immer voll da */
+.desktop-icon.selected {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: scale(1.05); /* Kleiner Pop-Effekt */
+}
+
 .desktop-icon.selected .icon-graphic { background: var(--text-white); color: var(--bg-color); }
 .desktop-icon.selected .icon-label { background: var(--crt-blue); padding: 0 4px; }
 
 .icon-graphic {
     width: 50px; height: 50px; border: 2px solid var(--text-white);
     background: var(--bg-color); position: relative; margin-bottom: 5px;
-    box-shadow: 4px 4px 0 #000;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
 }
 
 /* --- WINDOW GENERAL --- */
 .window-wrapper {
     position: absolute;
     display: flex; flex-direction: column;
-    box-shadow: 10px 10px 0px rgba(0,0,0,0.8);
+    box-shadow: 10px 10px 0px rgba(0,0,0,0.2);
     /* Transition für Width/Height statt Scale = True Resizing */
     transition: width 0.1s, height 0.1s, top 0.1s, left 0.1s;
     background: var(--bg-color);
@@ -198,15 +234,33 @@ body {
 }
 
 .window-wrapper.active { z-index: 100; border: 2px solid var(--window-border); }
-.window-wrapper.inactive { z-index: 50; border: 2px solid var(--window-inactive); box-shadow: none; opacity: 0.8; }
+.window-wrapper.inactive {
+    border: 2px solid var(--window-inactive);
+    box-shadow: none;
+
+    /* FIX: Hintergrund bleibt voll deckend! */
+    opacity: 1;
+    background-color: var(--bg-color);
+}
+
+.window-wrapper.inactive #blog-screen,
+.window-wrapper.inactive #social-screen,
+.window-wrapper.inactive #help-screen,
+.window-wrapper.inactive #files-screen,
+.window-wrapper.inactive #term-screen,
+.window-wrapper.inactive .title-bar {
+    opacity: 0.3; /* Inhalt wird sehr hell/inaktiv */
+    pointer-events: none; /* Man kann nicht versehentlich klicken */
+    filter: grayscale(100%); /* Optional: Macht den Inhalt Grau statt Blau */
+}
 
 .title-bar {
     height: 30px; border-bottom: 2px solid #000;
     display: flex; justify-content: space-between; align-items: center;
     padding: 0 5px; font-weight: bold; flex-shrink: 0; /* Titlebar darf nicht schrumpfen */
 }
-.window-wrapper.active .title-bar { background: var(--window-border); color: #000; }
-.window-wrapper.inactive .title-bar { background: var(--window-inactive); color: #888; }
+.window-wrapper.active .title-bar { background: var(--window-border); color: var(--bg-color); }
+.window-wrapper.inactive .title-bar { background: var(--window-inactive); color: var(--bg-color); }
 
 .title-text { flex-grow: 1; text-align: center; letter-spacing: 2px; }
 .win-btn { width: 15px; height: 15px; border: 1px solid #000; background: #fff; }
@@ -231,246 +285,642 @@ body {
 }
 
 header { display: flex; justify-content: space-between; margin-bottom: 20px; flex-shrink: 0; }
-.header-block { background-color: var(--crt-blue); color: var(--text-white); padding: 5px 15px; font-weight: bold; box-shadow: 4px 4px 0px rgba(0,0,0,0.5); }
+.header-block { background-color: var(--crt-blue); color: var(--text-white); padding: 5px 15px; font-weight: bold; box-shadow: 4px 4px 0px rgba(0,0,0,0.2); }
 .dots-filler { flex-grow: 1; border-bottom: 2px dotted var(--text-white); margin: 0 10px 5px 10px; opacity: 0.5; }
-.post-item { display: flex; justify-content: space-between; align-items: flex-end; padding: 2px 5px; margin-bottom: 8px; border: 1px solid transparent; }
+.post-item { display: flex; justify-content: space-between; align-items: flex-end; padding: 10px; margin-bottom: 8px; border: 1px solid transparent; }
 .post-item.active { background-color: var(--crt-blue); color: var(--text-white); }
 .post-item.active .dots-filler { opacity: 1; }
-.single-post { display: none; height: 100%; overflow-y: auto; scrollbar-width: none; }
 .single-post::-webkit-scrollbar { display: none; }
 .meta-row { display: flex; margin-bottom: 10px; }
 .label { width: 140px; } .value { flex-grow: 1; border-bottom: 2px dotted var(--text-white); }
 .post-body { margin-top: 30px; line-height: 1.4; white-space: pre-line; }
 
-/* --- MOBILE OPTIMIERUNG --- */
-@media (max-width: 800px) {
-
-    #win-blog {
-        /* Reset alle Desktop Styles */
-        position: fixed !important; top: 0 !important; left: 0 !important;
-        transform: none !important; width: 100% !important; height: 100dvh !important;
-        box-shadow: none !important; border: none !important; z-index: 1000 !important;
-    }
-
-    /* --- SPECIFIC WINDOWS --- */
-    /* WICHTIG: min-height:0 ist der Trick, damit Flex-Items scrollen */
-    #blog-screen {
-        flex-grow: 1;
-        padding: 15px;
-        overflow: hidden;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-    }
-
-    /* Sicherstellen, dass die Liste scrollbar ist, falls das Fenster winzig ist */
-    #list-view {
-        flex-grow: 1;
-        overflow-y: auto;
-        min-height: 0;
-        scrollbar-width: none; /* Optional: Scrollbar verstecken für Clean-Look */
-    }
-
-    /* Der Post View muss wachsen und scrollen */
-    #post-view {
-        flex-grow: 1;          /* Nimmt den restlichen Platz ein */
-        overflow-y: auto;      /* Erlaubt scrollen */
-        min-height: 0;         /* Wichtig für Flexbox Scrolling */
-        display: none;         /* Standardmäßig aus */
-        padding-right: 5px;    /* Abstand zur Scrollbar */
-    }
-
-    /* Custom Scrollbar für den Blog (passend zum Help Window) */
-    #post-view::-webkit-scrollbar { width: 6px; }
-    #post-view::-webkit-scrollbar-track { background: var(--bg-color); }
-    #post-view::-webkit-scrollbar-thumb { background-color: var(--crt-blue); border: 1px solid #fff; }
-}
-
-/* --- SOCIAL WINDOW STYLES --- */
-#win-social { width: 400px; height: 500px; } /* Startgröße */
+/* --- SOCIAL WINDOW STYLES (Twitter-Style Feed) --- */
+#win-social { width: 400px; height: 500px; }
 
 #social-screen {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 10px;
+    padding: 0px; /* Kein Padding mehr am Rand, damit der Feed die volle Breite nutzt */
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Abstand zwischen Posts */
+    gap: 0; /* WICHTIG: Keine Lücken mehr zwischen Posts für den Flow */
     min-height: 0;
 }
 
-/* Scrollbar für Social Feed */
+.search-cursor { animation: blink 1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* --- CSS UPDATE: SCROLL FIX --- */
+.single-post {
+    display: none;
+    /* FIX: Keine feste Höhe! Sonst kollidiert es mit dem Header */
+    height: auto;
+    flex-grow: 1;      /* Nimm den restlichen Platz */
+    min-height: 0;     /* Wichtig für Flexbox Scrolling */
+
+    overflow-y: auto;  /* Hier wird gescrollt */
+
+    /* Scrollbar verstecken (wie gewünscht) */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    /* FIX: Genug Platz unten lassen, damit man Attachments gut erreicht */
+    padding-bottom: 80px;
+}
+
+/* --- SOCIAL WINDOW STYLES (Structured Feed) --- */
+#win-social { width: 400px; height: 500px; }
+
+#social-screen {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    /* Wir nutzen gap: 0, damit die Rahmen aufeinander liegen */
+    gap: 0;
+    min-height: 0;
+}
+
 #social-screen::-webkit-scrollbar { width: 6px; }
 #social-screen::-webkit-scrollbar-track { background: var(--bg-color); }
 #social-screen::-webkit-scrollbar-thumb { background-color: var(--crt-blue); border: 1px solid #fff; }
 
-/* --- SCROLLBARS ENTFERNEN (Global) --- */
-#list-view, #post-view, #social-screen, .single-post, #blog-screen {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
-}
-::-webkit-scrollbar { display: none; } /* Chrome/Safari */
-
 /* --- SUCHE --- */
 .search-bar {
-    border-bottom: 1px dashed var(--text-white);
-    padding: 5px;
-    margin-bottom: 10px;
-    background: #000;
+    border-bottom: 2px solid var(--text-white); /* Harte Trennung zum Feed */
+    padding: 10px;
+    margin: 0;
+    background: var(--bg-color);
     color: var(--crt-blue);
     font-weight: bold;
     display: flex;
+    position: sticky; top: 0; z-index: 10;
+    margin-bottom: 20px;
 }
-.search-cursor {
-    animation: blink 1s step-end infinite;
-}
+.search-cursor { animation: blink 1s step-end infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 
-/* --- SOCIAL POST OPTIMIERUNG --- */
+/* --- SOCIAL POST (Der Container) --- */
 .social-post {
-    border: 1px solid transparent; /* Platzhalter */
-    background: rgba(0,0,0,0.2);
+    /* Harte Trennlinie ZWISCHEN den Posts */
+    border-bottom: 1px solid #444;
+
+    background: transparent;
     display: flex; flex-direction: column;
-    margin-bottom: 20px;
-    padding: 2px;
-    opacity: 0.6; /* Inaktive Posts dunkler */
+    margin: 0;
+    padding: 0;
+    opacity: 0.6;
     transition: all 0.2s;
+    position: relative;
+
+    /* FIX: Keine Border Left mehr */
+    border-left: none;
 }
 
-/* KLARES HIGHLIGHTING: Invertierte Farben */
+/* HIGHLIGHTING */
 .social-post.active-post {
-    border: 2px solid var(--text-white);
-    background: var(--bg-color);
     opacity: 1;
-    box-shadow: 0 0 15px rgba(255,255,255,0.1);
-    transform: scale(1.02); /* Leicht größer */
+    background-color: rgba(84, 118, 152, 0.05); /* Sehr subtiler Hintergrund */
+
+    /* FIX: Keine Border Left mehr */
+    border-left: none;
+
+    border-bottom: 1px solid var(--text-white); /* Trennlinie wird heller */
 }
 
-/* INTERAKTIONS-MODUS (Wenn man ENTER gedrückt hat) */
+/* INTERACTION MODE */
 .social-post.interaction-mode {
-    border-color: var(--crt-blue);
-    background: #000;
+    background-color: rgba(0,0,0,0.5); /* Etwas dunkler für Fokus */
 }
 
-/* Button Highlighting im Interaktions-Modus */
-.action-btn { padding: 0 5px; border: 1px solid transparent; }
-.action-btn.selected-btn {
-    background: var(--crt-blue);
-    color: var(--text-white);
-}
+/* --- INNER STRUCTURE (Abgrenzungen) --- */
 
-/* CAPTION (Standardmäßig eingeklappt) */
-.social-caption {
-    padding: 8px;
-    font-size: 1rem;
-    line-height: 1.2;
-    /* Eingeklappt */
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    transition: max-height 0.3s ease-out, opacity 0.2s;
-    border-top: 1px solid transparent;
-}
-
-/* Ausgeklappt */
-.social-caption.expanded {
-    max-height: 200px; /* Genug Platz für Text */
-    opacity: 1;
-    border-top: 1px dotted var(--text-white);
-    margin-top: 5px;
-}
-
-/* Der "User" Header im Post */
+/* 1. HEADER (User & ID) */
 .social-header {
-    border-bottom: 1px dotted var(--text-white);
-    padding: 5px;
+    /* Linie drunter zur Abtrennung vom Bild */
+    border-bottom: 1px dotted #666;
+    background: rgba(255,255,255,0.05); /* Leicht abgesetzt */
+
+    padding: 8px 10px;
     font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    background: var(--crt-blue);
-    color: var(--text-white);
+    display: flex; justify-content: space-between;
+
+    /* FIX: Standardmäßig BLAU, damit man es auf hellem Hintergrund sieht */
+    color: var(--crt-blue) !important;
+    font-size: 0.9rem;
 }
 
-/* Das ASCII Bild */
+/* Wenn der Post aktiv ist, wird der Header blau gefüllt -> Text muss WEISS werden */
+.social-post.active-post .social-header {
+    border-bottom-color: var(--text-white);
+    background: var(--crt-blue);
+    color: #ffffff !important; /* Weißer Text auf blauem Grund */
+}
+
+/* 2. BODY (Das ASCII Bild) */
 .ascii-pic {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 8px; /* Feinere Schrift für Bilder */
+    font-size: 8px;
     line-height: 8px;
     white-space: pre;
     overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 10px 0;
+    display: flex; justify-content: center; align-items: center;
+
+    /* Viel Platz lassen */
+    padding: 20px 0;
     color: var(--text-white);
 }
 
-/* Buttons (Like, Comment...) - Reine Optik */
+/* 3. FOOTER (Actions) */
 .social-actions {
-    border-top: 1px dotted var(--text-white);
-    border-bottom: 1px dotted var(--text-white);
-    padding: 5px;
-    display: flex;
-    gap: 10px;
+    /* Linie drüber zur Abtrennung vom Bild */
+    border-top: 1px dotted #666;
+    background: rgba(255,255,255,0.05); /* Leicht abgesetzt wie Header */
+
+    padding: 8px 10px;
+    display: flex; gap: 15px;
     font-size: 0.9rem;
+}
+
+.social-post.active-post .social-actions {
+    border-top-color: var(--text-white);
+}
+
+/* BUTTONS */
+.action-btn {
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s;
+    padding: 0 5px;
+}
+.social-post.active-post .action-btn { color: var(--text-white); }
+
+/* Wenn Button ausgewählt/aktiv (Blau) */
+.action-btn.selected-btn {
+    background: var(--crt-blue);
+    color: var(--text-white);
+    box-shadow: 0 0 5px var(--crt-blue);
+}
+
+/* CAPTION (Fährt unten raus) */
+.social-caption {
+    background: transparent;
+    padding: 0 10px;
+    font-size: 1rem;
+    line-height: 1.3;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: all 0.3s ease-out;
+    border-top: none;
+}
+
+.social-caption.expanded {
+    max-height: 200px;
+    opacity: 1;
+    padding-top: 10px; padding-bottom: 10px;
+    border-top: 1px dashed var(--text-white); /* Trennlinie zur Action Bar */
+}
+
+/* --- SCROLLBAR WEG (Social Feed) --- */
+#social-screen {
+    /* Standard für Firefox/IE */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+/* Für Chrome/Safari/Webkit */
+#social-screen::-webkit-scrollbar {
+    display: none;
 }
 
 /* --- MOBILE OPTIMIERUNG & TASKBAR --- */
 #mobile-taskbar { display: none; } /* Desktop: Aus */
 
+/* --- FILES APP (Finder) --- */
+#win-files { width: 500px; height: 400px; }
+
+#files-screen {
+    padding: 10px;
+    display: flex; flex-direction: column;
+    height: 100%;
+}
+
+.files-toolbar {
+    border-bottom: 2px solid var(--crt-blue);
+    padding-bottom: 5px; margin-bottom: 10px;
+    display: flex; gap: 15px;
+    font-weight: bold;
+    color: var(--crt-blue);
+}
+
+#file-list {
+    display: grid;
+    /* FIX: Feste 4 Spalten, damit Tastatur-Navigation sauber klappt */
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 90px;
+    gap: 10px;
+    overflow-y: auto;
+    padding: 5px;
+}
+
+.file-item {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+    padding: 10px 5px;
+    border: 1px dotted transparent;
+    opacity: 0.7;
+}
+
+/* Aktives File (Tastatur Auswahl) */
+.file-item.active-file {
+    background-color: var(--crt-blue);
+    color: #fff !important;
+    opacity: 1;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+}
+
+/* Damit das Icon im aktiven Zustand auch weiß wird */
+.file-item.active-file .file-icon { color: #fff !important; }
+
+.file-icon {
+    font-size: 2rem; margin-bottom: 5px;
+    color: var(--crt-blue);
+}
+.file-name {
+    font-size: 0.85rem;
+    word-break: break-all;
+    line-height: 1.1;
+    max-width: 100%;
+}
+
+/* --- BLOG ATTACHMENTS (Fix) --- */
+.attachment-section {
+    margin-top: 30px;
+    border-top: 2px solid var(--crt-blue);
+    padding-top: 10px;
+}
+.attachment-label { font-weight: bold; margin-bottom: 10px; display: block; color: var(--crt-blue); }
+
+.attachment-file {
+    border: 1px solid var(--crt-blue);
+    background: rgba(0, 34, 255, 0.05);
+    padding: 10px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; transition: all 0.2s;
+    margin-bottom: 5px;
+    color: var(--crt-blue);
+    text-decoration: none; /* Wichtig da wir jetzt <a> tags nutzen */
+}
+
+@media (hover: hover) {
+    .attachment-file:hover {
+        background: var(--crt-blue);
+        color: #fff !important;
+    }
+}
+
+.attachment-file.active-file {
+    background: var(--crt-blue);
+    color: #ffffff !important;
+    border-color: var(--crt-blue);
+    box-shadow: 0 0 8px rgba(0, 34, 255, 0.4);
+    outline: none; /* Standard-Browser-Rahmen weg */
+}
+
+/* Auch das Icon und der Text darin müssen weiß werden */
+.attachment-file.active-file span {
+    color: #ffffff !important;
+}
+
+/* --- BLOG POST NAVIGATION --- */
+.post-nav {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px dotted var(--crt-blue); /* Feine Trennlinie zum Inhalt */
+    display: flex;
+    align-items: center;
+}
+
+.nav-btn {
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--crt-blue);
+    border: 1px solid var(--crt-blue); /* Rahmen für Klickbarkeit */
+    padding: 5px 10px;
+    transition: all 0.2s;
+    background: transparent;
+    text-decoration: none;
+    display: inline-block;
+}
+
+/* Hover, Active & Keyboard Selection */
+.nav-btn:hover,
+.nav-btn:active,
+.nav-btn.selected-nav { /* <-- NEU */
+    background: var(--crt-blue);
+    color: #ffffff !important;
+    box-shadow: 0 0 5px var(--crt-blue); /* Optional: Kleiner Glow */
+}
+
+/* --- TERMINAL APP (System Style) --- */
+#win-term {
+    /* Standard Fenster-Look */
+    width: 600px; height: 400px;
+    background-color: var(--bg-color);
+    color: var(--crt-blue);
+    font-family: 'VT323', monospace; /* Deine System-Schrift */
+    font-size: 1.1rem;
+    font-weight: bold;
+    display: flex; flex-direction: column;
+}
+
+#term-screen {
+    padding: 10px;
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    cursor: none; /* Zeigt an, dass man tippen kann */
+
+    /* Scrollbar weg */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+#term-screen::-webkit-scrollbar { display: none; }
+
+#term-output {
+    display: flex;
+    flex-direction: column;
+    /* Kompakter Text */
+    line-height: 1.1;
+    gap: 2px; /* Minimaler Abstand zwischen Zeilen */
+}
+
+/* Die Log-Zeilen */
+.term-line {
+    margin: 0;
+    word-wrap: break-word;
+    white-space: pre;
+    font-family: 'VT323', monospace;
+}
+
+/* Die Eingabezeile */
+.input-line {
+    display: flex;
+    align-items: center;
+    margin-top: 2px;
+}
+
+#term-prompt {
+    margin-right: 5px;
+    white-space: nowrap;
+}
+
+/* --- TERMINAL CURSOR HACK --- */
+
+/* Der echte Input wird zum "Ghost" */
+#term-input {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0;             /* Unsichtbar */
+    background: transparent;
+    border: none;
+    color: transparent;     /* Text auch unsichtbar */
+    caret-color: transparent; /* Den dünnen Strich verstecken! */
+    cursor: default;
+    z-index: 10;            /* Liegt über allem, damit man tippen kann */
+}
+
+/* Der sichtbare Text (spiegelt den Input) */
+#term-visual-wrapper {
+    color: var(--crt-blue);
+    white-space: pre; /* Damit Leerzeichen dargestellt werden */
+    min-width: 0;
+}
+
+.term-selected-text {
+    background-color: var(--crt-blue);
+    color: var(--bg-color);
+    display: inline;
+    white-space: pre;
+}
+
+.term-cursor-char {
+    display: inline;
+    white-space: pre;
+    /* Wir starten im "invertierten" Modus (Blauer Block, weißer Text) */
+    background-color: var(--crt-blue);
+    color: var(--bg-color);
+    animation: blinkColors 1s step-end infinite;
+}
+
+/* Wenn Terminal inaktiv, Cursor ausblenden oder stoppen */
+.window-wrapper.inactive .term-cursor-char {
+    animation: none;
+    background-color: transparent;
+    color: var(--crt-blue);
+    outline: 1px solid rgba(0, 34, 255, 0.5);
+}
+
+@keyframes blinkColors {
+    0%, 49% {
+        background-color: var(--crt-blue);
+        color: var(--bg-color);
+    }
+    50%, 100% {
+        /* "Off"-Phase: Normaler Text (Blau auf Transparent) */
+        background-color: transparent;
+        color: var(--crt-blue);
+        /* Optional: Outline, damit man sieht wo der Cursor ist */
+        outline: 1px solid var(--crt-blue);
+    }
+}
+
+@keyframes blinkBlock {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* --- MOBILE OPTIMIERUNG --- */
 @media (max-width: 800px) {
-    /* GUI Anpassungen */
+
+    #boot-log, #loading-status, #progress-percent {
+        color: #ffffff !important;
+    }
+
+    /* --- GLOBAL FIXES --- */
+    /* GUI Anpassungen: Desktop Elemente ausblenden */
     #desktop-area, .title-bar, .window-controls { display: none !important; }
 
-    /* TASKBAR ANZEIGEN */
-    #mobile-taskbar {
-        display: flex;
-        position: fixed; bottom: 0; left: 0; width: 100%; height: 50px;
-        background: #000; border-top: 2px solid var(--text-white);
-        z-index: 9999;
-        justify-content: space-around; align-items: center;
-        font-size: 1.2rem;
+    /* Cursor auf Auto setzen für Touch */
+    body { cursor: auto; }
+
+    /* --- MOBILE BOOT SCREEN FIXES --- */
+
+    #loading-screen {
+        /* Hintergrund sicherstellen (Hyper Blue) */
+        background-color: var(--crt-blue) !important;
+
+        /* FIX: Das Raster viel subtiler machen (nur 10% Deckkraft) */
+        background-image:
+                radial-gradient(rgba(0,0,0,0.1) 15%, transparent 16%),
+                radial-gradient(rgba(0,0,0,0.1) 15%, transparent 16%) !important;
+        background-size: 4px 4px !important;
     }
 
-    .mobile-tab {
-        color: #888; cursor: pointer; padding: 10px;
-    }
-    .mobile-tab.active {
-        color: var(--text-white); font-weight: bold; text-shadow: 0 0 5px var(--crt-blue);
+    /* FIX: Ladebalken muss WEISS sein auf dem blauen Grund */
+    #progress-bar-container {
+        border-color: #ffffff !important;
     }
 
-    /* FENSTER MANAGEMENT MOBILE (Generalisiert!) */
-    /* Alle aktiven Fenster werden Fullscreen angezeigt */
-    .window-wrapper.active {
-        display: flex !important;
+    #progress-bar-fill {
+        background-color: #ffffff !important;
+        box-shadow: 0 0 10px rgba(255,255,255,0.5); /* Leichter Glow für Coolness */
+    }
+
+    /* Status Text (Prozentanzeige) auch Weiß erzwingen */
+    #loading-status {
+        color: #ffffff !important;
+    }
+
+    #loading-window {
+        border: none; box-shadow: none; background: transparent;
+    }
+
+    /* --- WINDOW MANAGEMENT --- */
+    /* Fenster immer Fullscreen */
+    #win-blog, #win-social, #win-help, #win-files {
         position: fixed !important; top: 0 !important; left: 0 !important;
-        width: 100% !important; height: calc(100dvh - 50px) !important; /* Platz für Taskbar lassen */
-        transform: none !important;
-        box-shadow: none !important; border: none !important;
-        z-index: 100 !important;
+        transform: none !important; width: 100% !important; height: calc(100dvh - 60px) !important; /* Platz für Taskbar */
+        box-shadow: none !important; border: none !important; z-index: 100 !important;
+        background: var(--bg-color) !important; /* Hintergrund Hellgrau */
     }
 
-    /* Inaktive Fenster komplett ausblenden */
-    .window-wrapper.inactive {
-        display: none !important;
-    }
+    /* Inaktive Fenster weg */
+    .window-wrapper.inactive { display: none !important; }
 
-    /* SCROLLING FIXES */
+    /* Scrolling ermöglichen */
     #blog-screen, #social-screen, #help-screen {
-        padding: 15px; padding-bottom: 60px; /* Buffer für Taskbar */
+        padding-bottom: 20px;
         overflow-y: auto; min-height: 0; flex-grow: 1;
     }
     #list-view, #post-view { overflow-y: auto; flex-grow: 1; min-height: 0; }
 
-    /* Custom Scrollbar auch mobil anzeigen (optional, falls gewünscht) */
-    ::-webkit-scrollbar { width: 4px; display: block; }
+    /* --- TASKBAR (Unten) --- */
+    #mobile-taskbar {
+        display: flex;
+        position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; /* Etwas höher für Touch */
 
-    /* HEADER & TEXT */
-    header { margin-bottom: 15px; }
-    .header-block { padding: 5px 10px; font-size: 1.5rem; }
-    .post-item { padding: 10px 5px; font-size: 1.1rem; }
-    .post-body { font-size: 1.1rem; line-height: 1.5; }
+        /* NEU: Hintergrund Blau! */
+        background: var(--crt-blue);
+        border-top: none; /* Keine Linie mehr nötig, der Kontrast reicht */
 
-    body { cursor: auto; }
+        z-index: 9999;
+        justify-content: space-around; align-items: center;
+        font-size: 1.2rem;
+        padding-bottom: env(safe-area-inset-bottom); /* iPhone Home-Bar Abstand */
+    }
+
+    .mobile-tab {
+        /* Inaktive Tabs: Weiß aber transparent (damit sie auf Blau gut aussehen) */
+        color: rgba(255,255,255,0.6);
+        cursor: pointer; padding: 10px;
+        font-weight: normal;
+    }
+
+    /* Aktiver Tab wird im globalen Contrast-Fix (oben) auf Weiß gesetzt,
+       aber hier sicherheitshalber nochmal definiert */
+    .mobile-tab.active {
+        color: #ffffff !important;
+        font-weight: bold;
+        opacity: 1;
+        text-shadow: none;
+    }
+
+    /* --- SOCIAL FEED MOBILE FIXES --- */
+
+    /* 1. Einheitlicher Look: Kein "Aktiv/Inaktiv" mehr */
+    .social-post, .social-post.active-post {
+        opacity: 1 !important; /* Immer voll sichtbar */
+        background: transparent !important; /* Kein Hintergrund */
+        border-left: none !important; /* Kein Balken */
+        border-bottom: 1px solid #ccc !important; /* Feine graue Linie */
+    }
+
+    /* 2. TEXT FARBE FIX: Header Text IMMER Blau auf Mobile */
+    /* Das überschreibt die Desktop-Regel "Active = Weiß" */
+    .social-header,
+    .social-post.active-post .social-header {
+        background: transparent !important; /* Kein blauer Balken */
+        color: var(--crt-blue) !important; /* Text MUSS Blau bleiben */
+        border-color: #ccc !important;
+    }
+
+    /* 3. Footer auch schlicht */
+    .social-actions,
+    .social-post.active-post .social-actions {
+        background: transparent !important;
+        border-top: 1px dotted #ccc !important;
+    }
+
+    /* 4. Buttons normal sichtbar machen */
+    .action-btn { opacity: 1; color: #888; }
+    /* Wenn geliked (active class), greift die globale Regel (Blau + Weißer Text) */
+
+    /* --- FILES APP MOBILE --- */
+    /* Weniger Spalten auf dem Handy, damit Icons Platz haben */
+    #file-list {
+        grid-template-columns: repeat(2, 1fr) !important;
+        padding-bottom: 80px; /* Platz für Taskbar unten */
+    }
+
+    /* Toolbar etwas kompakter */
+    .files-toolbar {
+        font-size: 0.9rem;
+    }
+    #files-screen {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 15px;
+        min-height: 0;
+    }
+
+    #icon-term, #win-term { display: none !important; }
+
+}
+
+/* --- INVISIBLE SCROLLING (Cleaner Look) --- */
+
+/* Alle Elemente, die scrollen können */
+#blog-scroll-area,
+#social-screen,
+#files-screen,
+.single-post,
+#help-screen {
+    /* Firefox */
+    scrollbar-width: none;
+
+    /* IE 10+ */
+    -ms-overflow-style: none;
+}
+
+/* Chrome, Safari, Edge */
+#blog-scroll-area::-webkit-scrollbar,
+#social-screen::-webkit-scrollbar,
+#files-screen::-webkit-scrollbar,
+.single-post::-webkit-scrollbar,
+#help-screen::-webkit-scrollbar,
+::-webkit-scrollbar { /* Globaler Catch-All */
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.keyboard-scrolling .attachment-file,
+.keyboard-scrolling .nav-btn {
+    pointer-events: none;
 }

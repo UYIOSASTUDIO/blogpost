@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#020205">
-    <title>SYSTEM 3615</title>
+    <meta name="theme-color" content="#0022FF">
+    <title>SYSTEM 1806</title>
+
+    <link rel="icon" type="image/x-icon" href="./favicon/favicon.ico">
+
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon/favicon-16x16.png">
+
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -82,22 +88,66 @@
 
     <div id="icon-help" class="desktop-icon" data-app="help">
         <div class="icon-graphic" style="display:flex;justify-content:center;align-items:center;">?</div>
-        <span class="icon-label">HELP.TXT</span>
+        <span class="icon-label">README.TXT</span>
     </div>
 
     <div id="icon-social" class="desktop-icon" data-app="social">
         <div class="icon-graphic" style="display:flex;justify-content:center;align-items:center;">@</div>
-        <span class="icon-label">INSTA.EXE</span>
+        <span class="icon-label">POSTS.EXE</span>
+    </div>
+
+    <div id="icon-files" class="desktop-icon" data-app="files">
+        <div class="icon-graphic" style="display:flex;justify-content:center;align-items:center;">⏏︎</div>
+        <span class="icon-label">FILES</span>
+    </div>
+
+    <div id="icon-term" class="desktop-icon" data-app="term">
+        <div class="icon-graphic" style="display:flex;justify-content:center;align-items:center;">>_</div>
+        <span class="icon-label">TERM</span>
     </div>
 </div>
 
 <div id="win-social" class="window-wrapper inactive">
     <div class="title-bar">
-        <div class="window-controls"><div class="win-btn"></div></div>
-        <div class="title-text">INSTA V1.0</div>
-        <div class="window-controls"><div class="win-btn"></div></div>
+        <div class="title-text">POSTS V1.0</div>
     </div>
     <div id="social-screen">
+    </div>
+</div>
+
+<div id="win-files" class="window-wrapper inactive">
+    <div class="title-bar">
+        <div class="title-text">A:\FILES</div>
+    </div>
+    <div id="files-screen">
+        <div class="files-toolbar">
+            <span id="file-path-display">A:\FILES</span>
+
+            <span style="flex-grow:1; text-align:right;">[ENTER] = OPEN</span>
+        </div>
+        <div id="file-list"></div>
+    </div>
+</div>
+
+<div id="win-term" class="window-wrapper inactive">
+    <div class="title-bar">
+        <div class="title-text">CMD.EXE</div>
+    </div>
+    <div id="term-screen">
+        <div id="term-output">
+            <div class="term-line">SYSTEM 3615 [VERSION 1.0]</div>
+            <div class="term-line">(C) 2026 EKLAT CORP.</div>
+            <div class="term-line">&nbsp;</div> </div>
+        <div class="input-line">
+            <span id="term-prompt">A:\FILES></span>
+
+            <div style="position: relative; flex-grow: 1; display: flex;">
+
+                <span id="term-visual-wrapper" style="white-space: pre; color: var(--crt-blue); min-width: 10px;"></span>
+
+                <input type="text" id="term-input" autocomplete="off" spellcheck="false">
+            </div>
+        </div>
     </div>
 </div>
 
@@ -106,13 +156,13 @@
         <div class="title-text">/// SYSTEM TM ///</div>
     </div>
     <div id="blog-screen">
-    <header>
-        <div class="logo-section">
-            <div class="top-line">→ 3615 BLOG</div>
-            <div style="line-height:0.6; opacity:0.8;">/////<br>/////<br>/////</div>
-        </div>
-        <div class="header-block">11 T</div>
-    </header>
+        <header>
+            <div class="logo-section">
+                <div class="top-line">→ EKLAT BLOG</div>
+                <div style="line-height:0.6; opacity:0.8;">/////<br>/////<br>/////</div>
+            </div>
+            <div class="header-block" id="blog-header-count">INIT...</div>
+        </header>
         <div id="list-view"></div>
         <div id="post-view" class="single-post"></div>
     </div>
@@ -123,36 +173,40 @@
         <div class="title-text">README.TXT</div>
     </div>
     <div id="help-screen">
-        <div style="text-align:center; margin-bottom:20px; border:1px solid #fff; padding:5px;">
+        <div style="text-align:center; margin-bottom:20px; border:1px solid #0022FF; padding:5px;">
             SYSTEM MANUAL<br>VERSION 1.0
         </div>
 
         <div class="help-entry">
             <span class="key-combo">ARROWS + ENTER</span>
-            Navigieren & Lesen
+            Navigate & Read
         </div>
 
         <div class="help-entry">
             <span class="key-combo">CTRL + SPACE</span>
-            Fokus Wechseln<br>(Desktop <-> Fenster)
+            Change Focus<br>(Desktop <-> Window)
         </div>
 
         <div class="help-entry">
             <span class="key-combo">TAB</span>
-            Fenster Wechseln<br>(Wenn mehrere offen)
+            Switch Window<br>(if multiple are open)
         </div>
 
         <div class="help-entry">
             <span class="key-combo">CMD + ARROWS</span>
-            Fenster verschieben
+            Move Window
         </div>
         <div class="help-entry">
             <span class="key-combo">CMD + +/-</span>
-            Größe ändern
+            Resize
+        </div>
+        <div class="help-entry">
+            <span class="key-combo">CTRL + OPT + ARROWS</span>
+            Change Width / Height of Window
         </div>
         <div class="help-entry">
             <span class="key-combo">CMD + BACKSPACE</span>
-            Fenster schließen
+            Close Window
         </div>
         <br>
         <div style="text-align:center; opacity:0.5;">
@@ -166,9 +220,10 @@
 <div id="mobile-taskbar">
     <div class="mobile-tab active" id="tab-blog" onclick="switchMobileApp('blog')">[ BLOG ]</div>
     <div class="mobile-tab" id="tab-social" onclick="switchMobileApp('social')">[ SOCIAL ]</div>
-    <div class="mobile-tab" id="tab-help" onclick="switchMobileApp('help')">[ ? ]</div>
+    <div class="mobile-tab" id="tab-files" onclick="switchMobileApp('files')">[ FILES ]</div>
 </div>
 
 <script src="script.js"></script>
+<script src="terminal.js"></script>
 </body>
 </html>
